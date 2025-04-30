@@ -74,8 +74,6 @@ export default function Dashboard() {
           await logout(); 
           toast.error("Sessão expirada. Por favor, faça login novamente.")
           // **Redireciona usando router.push (método preferencial do Next.js)**
-          // Se esta chamada falhar (devido ao erro "No router instance"), o catch abaixo do useEffect NÃO pega.
-          // O fallback está na função `redirectToLogin` usada no onClick do botão.
           router.push('/login');
         } else {
           // Para outros erros, apenas exibe a mensagem (sem redirecionar automaticamente)
@@ -136,8 +134,7 @@ export default function Dashboard() {
     }
   }
 
-
-  // **Função para redirecionar - usa router.push por padrão com fallback**
+  // Função para redirecionar - usa router.push por padrão com fallback
   // Esta função é a chave para garantir que o botão funcione mesmo com o erro "No router instance found"
   const redirectToLogin = () => {
     try {
@@ -165,16 +162,17 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex flex-col items-center justify-center gap-4 p-4">
         <p className="text-red-500 text-center">{error}</p>
-        <div className="flex gap-4">
+        {/* ALTERADO AQUI: Muda para flex-col para empilhar os botões */}
+        <div className="flex flex-col gap-4"> 
           <Button 
-            // **Usa a nova função redirectToLogin no onClick do botão**
+            // Usa a função redirectToLogin no onClick do botão
             onClick={redirectToLogin} 
             className="bg-[#00FF00] text-black hover:bg-[#00CC00]"
           >
             Ir para Login
           </Button>
           {/* Mostra o botão de tentar novamente apenas se não for um erro 401 (sessão expirada já redireciona automaticamente) */}
-          {/* A condição verifica se `error` existe, é uma string e NÃO inclui '401'. Ajuste a string '401' se a mensagem de erro mudar. */}
+          {/* A condição verifica se `error` existe, é uma string e NÃO inclui '401'. */}
           {error && typeof error === 'string' && !error.includes('401') && ( 
           <Button 
             onClick={handleRetry} 
@@ -222,6 +220,7 @@ export default function Dashboard() {
             </Tabs>
           </div>
         </div>
+        {/* Nota: TailwindCSS com flex-col + gap-4 funciona bem para espaçamento vertical */}
       </div>
     </ProtectedRoute>
   )
