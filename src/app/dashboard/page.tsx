@@ -1,175 +1,246 @@
+// src/app/dashboard/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+// Importação correta do roteador para App Router
+import { useRouter } from "next/navigation" 
 import { Tabs, TabsContent } from "../components/ui/tabs"
+// Verifique e ajuste estes caminhos conforme a estrutura do seu projeto
 import { ProfileOverview } from "../components/dashboard/profile-overview"
 import { FanEngagement } from "../components/dashboard/fan-engagement"
 import { ExclusiveOffers } from "../components/dashboard/exclusive-offers"
 import { UpcomingEvents } from "../components/dashboard/upcoming-events"
 import { DashboardHeader } from "../components/dashboard/dashboard-header"
 import { DashboardSidebar } from "../components/dashboard/dashboard-sidebar"
-import ChatPage from "../chat/page"
-import ProtectedRoute from "../ProtectedRoute/ProtectedRoute"
-import CommunityPage from "../community/page"
-import { getProfile, logout } from "../services/profile.service"
-import { Button } from "../components/ui/button"
-import { toast } from "react-hot-toast"
+import ChatPage from "../chat/page" 
+import ProtectedRoute from "../ProtectedRoute/ProtectedRoute" 
+import CommunityPage from "../community/page" 
+import { Button } from "../components/ui/button" 
+import { toast } from "react-hot-toast" 
+
+// Importe as funções de API do seu arquivo de serviço unificado (ou do arquivo profile.service se mantiver separado)
+// AJUSTE este caminho se o seu arquivo de serviço estiver em outro local
+// Se logout estiver em outro arquivo (ex: auth.service.ts), importe-o de lá.
+// Assumindo que getProfile e logout estão no arquivo de serviço unificado ou em profile.service
+import { getProfile, logout } from "../services/auth.service" // Use api.service se unificado, ou profile.service se separado
+
 
 export default function Dashboard() {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState("overview")
-  const [userData, setUserData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // Obtém a instância do roteador
+  const router = useRouter() 
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const profile = await getProfile()
-        
-        if (!profile || !profile.user) {
-          throw new Error("Dados do usuário não encontrados")
-        }
+  const [activeTab, setActiveTab] = useState("overview")
+  const [userData, setUserData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-        setUserData({
-          user: {
-            id: profile.user.id,
-            name: profile.user.name,
-            email: profile.user.email,
-            role: profile.user.role,
-            created_at: profile.user.created_at
-          },
-          profile: profile.profile || {}, // Usa os dados do perfil ou objeto vazio
-          profileCompletion: calculateProfileCompletion(profile),
-          memberSince: new Date(profile.user.created_at).toLocaleDateString('pt-BR', { 
-            year: 'numeric', 
-            month: 'long' 
-          }),
-          interests: profile.interests || ["CS:GO", "Valorant", "League of Legends"],
-          socialConnections: profile.socialConnections || ["Twitter", "Instagram", "Discord"],
-          upcomingEvents: profile.upcomingEvents || [
-            { id: 1, name: "FURIA vs Liquid - ESL Pro League", date: "15/05/2025", location: "São Paulo, Brasil" },
-            { id: 2, name: "Meet & Greet com Jogadores FURIA", date: "22/05/2025", location: "Online" },
-          ],
-          exclusiveOffers: profile.exclusiveOffers || [
-            { id: 1, name: "Desconto de 20% na nova camisa", expires: "30/05/2025", code: "FURIA20" },
-            { id: 2, name: "Acesso antecipado ao novo merchandise", expires: "15/06/2025" },
-          ],
-          recentActivity: profile.recentActivity || [
-            { id: 1, type: "event", description: "Participou do evento FURIA Fan Day", date: "10/04/2025" },
-            { id: 2, type: "purchase", description: "Comprou ingresso para ESL Pro League", date: "05/04/2025" },
-            { id: 3, type: "social", description: "Compartilhou conteúdo da FURIA no Twitter", date: "01/04/2025" },
-          ]
-        })
-        setError(null)
-      } catch (error: any) {
-        console.error("Erro ao carregar perfil:", error)
-        setError(error.message || "Erro ao carregar dados do usuário")
-        
-        // Se for erro 401 (não autorizado), faz logout
-        if (error.message.includes('401')) {
-          await logout()
-          toast.error("Sessão expirada. Por favor, faça login novamente.")
-          router.push('/login')
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        // Tenta carregar o perfil. getProfile deve lançar um erro com status (como 401 ou 404).
+        const profile = await getProfile()
+        
+        // Esta verificação agora deve ser menos acionada se o backend retornar a estrutura esperada.
+        // Mas é bom manter caso o backend retorne 200 com dados vazios/inesperados.
+        if (!profile || !profile.user) {
+            console.error("API getProfile retornou dados inesperados:", profile);
+          throw new Error("Dados do usuário não encontrados ou incompletos na resposta da API");
+        }
 
-    fetchProfile()
-  }, [router])
+        // Se sucesso, define os dados do usuário e limpa o erro
+        setUserData({
+          // Certifique-se de que profile.user, profile.profile, etc., existam e tenham a estrutura correta
+          user: {
+            id: profile.user.id,
+            name: profile.user.name,
+            email: profile.user.email,
+            role: profile.user.role,
+            created_at: profile.user.created_at 
+          },
+          profile: profile.profile || {}, // Usa os dados do perfil ou objeto vazio
+          profileCompletion: calculateProfileCompletion(profile), // Adapte esta função se a estrutura de dados mudar
+          memberSince: profile.user.created_at ? new Date(profile.user.created_at).toLocaleDateString('pt-BR', { 
+            year: 'numeric', 
+            month: 'long' 
+          }) : 'Data desconhecida',
+          // Use os dados retornados pelo backend ou defaults vazios se não vierem (conforme a estrutura ajustada do backend)
+          interests: profile.interests || [], 
+          socialConnections: profile.socialConnections || [], 
+          upcomingEvents: profile.upcomingEvents || [],
+          exclusiveOffers: profile.exclusiveOffers || [],
+          recentActivity: profile.recentActivity || []
+        })
+        setError(null) // Limpa qualquer erro anterior
+      } catch (error: any) {
+        console.error("Erro ao carregar perfil (catch):", error)
+        // Define a mensagem de erro para exibição na UI (usa error.message ou genérica)
+        setError(error.message || "Erro ao carregar dados do usuário")
+        
+        // **Lógica para redirecionamento automático em caso de 401**
+        // Agora verifica error.status === 401 (assumindo que o helper em api.service adiciona .status)
+        if (error.status === 401) { 
+          console.log("Erro 401 detectado, redirecionando para login automaticamente...");
+          // Chama logout no frontend para limpar o cookie localmente (se existir no browser)
+          await logout(); 
+          toast.error("Sessão expirada. Por favor, faça login novamente.")
+          // Redireciona usando router.push (método preferencial do Next.js)
+          router.push('/login');
+        } else {
+          // Para outros erros (404, 500, dados incompletos, etc.), exibe a mensagem e deixa o usuário tentar novamente ou ir para login
+          toast.error(error.message || "Erro ao carregar dados.")
+        }
+      } finally {
+        setLoading(false) // Esconde o spinner de loading
+      }
+    }
 
-  const calculateProfileCompletion = (profile: any) => {
-    // Implemente sua lógica de cálculo de completude do perfil
-    return 85 // Exemplo fixo - ajuste conforme necessário
-  }
+    fetchProfile()
+  }, [router]) // router é dependência
 
-  const handleRetry = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const profile = await getProfile()
-      setUserData({
-        ...userData,
-        ...profile
-      })
-    } catch (error) {
-      setError("Falha ao recarregar os dados. Tente novamente mais tarde.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Função para calcular a completude do perfil (mantida)
+  const calculateProfileCompletion = (profile: any) => {
+    // Implemente sua lógica de cálculo baseada na *nova* estrutura de dados (profile.user, profile.profile, profile.interests, etc.)
+    let completion = 0;
+    const totalFields = 5; 
+    // Exemplos baseados na nova estrutura:
+    if (profile?.user?.name) completion += 1;
+    if (profile?.user?.email) completion += 1;
+    // Verifique se profile.interests é um array e tem itens
+    if (profile?.interests && Array.isArray(profile.interests) && profile.interests.length > 0) completion += 1;
+    // Verifique se profile.recentActivity é um array e tem itens
+    if (profile?.recentActivity && Array.isArray(profile.recentActivity) && profile.recentActivity.length > 0) completion += 1; 
+    // Verifique se profile.socialConnections é um array e tem itens
+    if (profile?.socialConnections && Array.isArray(profile.socialConnections) && profile.socialConnections.length > 0) completion += 1;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    )
-  }
+    return Math.min(100, (completion / totalFields) * 100);
+  }
 
-  if (error || !userData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex flex-col items-center justify-center gap-4 p-4">
-        <p className="text-red-500 text-center">{error}</p>
-        <div className="flex gap-4">
-          <Button 
-            onClick={() => router.push('/login')} 
-            className="bg-[#00FF00] text-black hover:bg-[#00CC00]"
-          >
-            Ir para Login
-          </Button>
-          <Button 
-            onClick={handleRetry} 
-            variant="outline" 
-            className="text-white border-white hover:bg-gray-800"
-          >
-            Tentar Novamente
-          </Button>
-        </div>
-      </div>
-    )
-  }
+  // Função para tentar recarregar os dados (mantida, usando getProfile corrigido)
+  const handleRetry = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const profile = await getProfile()
+      // Esta verificação agora deve ser menos acionada se o backend retornar a estrutura esperada.
+      if (!profile || !profile.user) {
+            console.error("API getProfile retornou dados inesperados ao tentar novamente:", profile);
+        throw new Error("Dados do usuário não encontrados ou incompletos na resposta da API ao tentar novamente");
+      }
+      setUserData({
+        // Mapeie os dados retornados pelo backend para a estrutura esperada pelo frontend
+        user: { id: profile.user.id, name: profile.user.name, email: profile.user.email, role: profile.user.role, created_at: profile.user.created_at },
+        profile: profile.profile || {},
+        profileCompletion: calculateProfileCompletion(profile),
+        memberSince: profile.user.created_at ? new Date(profile.user.created_at).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' }) : 'Data desconhecida',
+        interests: profile.interests || [],
+        socialConnections: profile.socialConnections || [],
+        upcomingEvents: profile.upcomingEvents || [],
+        exclusiveOffers: profile.exclusiveOffers || [],
+        recentActivity: profile.recentActivity || []
+      })
+      setError(null)
+      toast.success("Dados recarregados com sucesso!")
+    } catch (error: any) {
+      console.error("Erro ao tentar recarregar perfil (catch):", error);
+      if (error.status === 401) {
+        console.log("Erro 401 detectado ao tentar novamente, redirecionando...");
+        await logout();
+        toast.error("Sessão expirada. Por favor, faça login novamente.")
+        router.push('/login');
+      } else {
+        setError(error.message || "Falha ao recarregar os dados. Tente novamente mais tarde.")
+        toast.error(error.message || "Falha ao recarregar.")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white">
-        <DashboardHeader userData={userData} setActiveTab={setActiveTab} />
+  // Função para redirecionar - usa router.push por padrão com fallback para window.location.href
+  const redirectToLogin = () => {
+    try {
+      console.log("Attempting redirect with router.push");
+      router.push('/login');
+    } catch (e) {
+      console.error("router.push failed for button click, using window.location:", e);
+      window.location.href = '/login'; 
+    }
+  };
 
-        <div className="container mx-auto py-6 flex flex-col md:flex-row gap-6">
-          <DashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          <div className="flex-1">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
-              <TabsContent value="overview" className="mt-0">
-                <ProfileOverview userData={userData} />
-              </TabsContent>
+  // Renderiza o spinner de loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
 
-              <TabsContent value="engagement" className="mt-0">
-                <FanEngagement userData={userData} />
-              </TabsContent>
+  // Renderiza a tela de erro se houver erro ou userData for null/undefined
+  if (error || !userData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex flex-col items-center justify-center gap-4 p-4">
+        <p className="text-red-500 text-center">{error}</p>
+        {/* Botões empilhados verticalmente */}
+        <div className="flex flex-col gap-4"> 
+          <Button 
+            onClick={redirectToLogin} // Usa a função com fallback
+            className="bg-[#00FF00] text-black hover:bg-[#00CC00]"
+          >
+            Ir para Login
+          </Button>
+          {/* Mostra o botão de tentar novamente apenas se não for um erro 401 (sessão expirada já redireciona automaticamente) */}
+          {/* Verifica error.status para ser mais preciso */}
+          {error && (error as any).status !== 401 && ( 
+          <Button 
+            onClick={handleRetry} 
+            variant="outline" 
+            className="text-white border-white hover:bg-gray-800"
+          >
+            Tentar Novamente
+          </Button>
+          )}
+        </div>
+        {/* Nota: TailwindCSS com flex-col + gap-4 funciona bem para espaçamento vertical */}
+      </div>
+    )
+  }
 
-              <TabsContent value="offers" className="mt-0">
-                <ExclusiveOffers userData={userData} />
-              </TabsContent>
+  // Conteúdo normal do dashboard se não houver erro e userData existir
+  return (
+    <ProtectedRoute> {/* Certifique-se de que ProtectedRoute envolva apenas o conteúdo que necessita de autenticação */}
+      <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white">
+        <DashboardHeader userData={userData} setActiveTab={setActiveTab} />
 
-              <TabsContent value="events" className="mt-0">
-                <UpcomingEvents userData={userData} />
-              </TabsContent>
+        <div className="container mx-auto py-6 flex flex-col md:flex-row gap-6">
+          <DashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-              <TabsContent value="community" className="mt-0 h-full">
-                <CommunityPage userData={userData} />
-              </TabsContent>
-              
-              <TabsContent value="chat" className="mt-0 h-full">
-                <ChatPage />
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-      </div>
-    </ProtectedRoute>
-  )
+          <div className="flex-1">
+            {/* TabsList ficaria aqui */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
+              <TabsContent value="overview" className="mt-0">
+                <ProfileOverview userData={userData} />
+              </TabsContent>
+              <TabsContent value="engagement" className="mt-0">
+                <FanEngagement userData={userData} />
+              </TabsContent>
+              <TabsContent value="offers" className="mt-0">
+                <ExclusiveOffers userData={userData} />
+              </TabsContent>
+              <TabsContent value="events" className="mt-0">
+                <UpcomingEvents userData={userData} />
+              </TabsContent>
+              <TabsContent value="community" className="mt-0 h-full">
+                <CommunityPage userData={userData} />
+              </TabsContent>
+              <TabsContent value="chat" className="mt-0 h-full">
+                <ChatPage />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </div>
+    </ProtectedRoute>
+  )
 }

@@ -1,9 +1,10 @@
-// src/services/api.service.ts ou onde suas funções de API estão
+// src/services/api.service.ts
 
 // URL base da API (usando a variável de ambiente para produção ou localhost)
-// Corrigido: Deve ser apenas a base do backend, sem a parte /api/...
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// CORRIGIDO: Deve ser apenas a base do backend (ex: https://furia-backend-8tck.onrender.com ou http://localhost:5000)
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+// Interfaces de dados (mantidas)
 interface RegisterData {
   name: string;
   email: string;
@@ -23,158 +24,135 @@ export interface AuthResponse {
     name: string;
     email: string;
     role?: string;
-    // Adicione outros campos do usuário que espera receber, como created_at
-    created_at?: string;
-    // Remova password daqui, nunca envie a senha de volta
-    // password?: string; 
+    created_at?: string | Date; 
   };
   error?: string;
 }
+
+// --- Funções Auxiliares ---
+
+// Função helper para parsear resposta JSON e tratar erros HTTP
+async function handleApiResponse<T>(response: Response): Promise<T> {
+    const contentType = response.headers.get("content-type") || "";
+    const isJson = contentType.includes("application/json");
+
+    let result = null;
+    if (isJson) {
+        try {
+            result = await response.json();
+        } catch (e) {
+            console.error("Erro ao parsear JSON da resposta:", e);
+            // Se esperava JSON mas falhou, trata como resposta inesperada
+            const parseError = new Error(`Resposta inesperada do servidor (${response.status}). Erro ao parsear JSON.`);
+            (parseError as any).status = response.status; // Adiciona o status
+            throw parseError;
+        }
+    }
+
+    if (!response.ok) {
+        // Se a resposta não foi OK, lança um erro com informações do backend (se JSON) ou status
+        const errorMsg = isJson && result && result.message ? result.message : `Erro do servidor: Status ${response.status}`;
+        const httpError = new Error(errorMsg);
+        // Adiciona o status ao erro para tratamento no frontend (ex: dashboard)
+        (httpError as any).status = response.status; 
+        // Opcional: adicionar outros detalhes do resultado JSON ao erro
+        if (isJson && result) {
+             (httpError as any).details = result;
+        }
+        console.error(`API Error: ${response.status} - ${errorMsg}`, isJson ? result : await response.text());
+        throw httpError;
+    }
+
+    // Se a resposta foi OK, retorna o resultado JSON (ou null se não for JSON e for 204 No Content)
+    if (!isJson && response.status === 204) return null as T; 
+    if (!isJson) {
+         console.warn(`API Success with non-JSON response: ${response.status}`, await response.text());
+         // Se chegou aqui e é OK mas não é JSON, pode ser um problema inesperado na API
+         // Dependendo do caso, pode querer lançar um erro ou retornar algo diferente.
+         // Por enquanto, vamos lançar um erro para alertar.
+         const nonJsonError = new Error(`Resposta de sucesso inesperada do servidor (${response.status}). Não é JSON.`);
+         (nonJsonError as any).status = response.status;
+         throw nonJsonError;
+    }
+
+    return result as T;
+}
+
 
 // --- Funções de Autenticação ---
 
 // Registrar novo usuário
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
-  try {
-    // Corrigido: Adiciona /api/auth/register APÓS o API_URL base
-    const response = await fetch(`${API_URL}/api/auth/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // Importante para enviar cookies
-      body: JSON.stringify(data),
-    });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text();
-      console.error("Resposta inesperada no registro:", text);
-      throw new Error(`Resposta inesperada do servidor (${response.status}).`);
-    }
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error("Erro no registro:", result);
-      throw new Error(result.message || `Erro no registro: ${response.status}`);
-    }
-
-    return result;
-  } catch (error: any) {
-    console.error("Registration error catch:", error);
-    throw error;
-  }
+  // CORRIGIDO: Adiciona /api/auth/register APÓS o API_URL base
+  const response = await fetch(`${API_URL}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include", // Importante para enviar cookies
+    body: JSON.stringify(data),
+  });
+  return handleApiResponse<AuthResponse>(response); // Usa helper
 };
 
 // Login de usuário
 export const login = async (data: LoginData): Promise<AuthResponse> => {
-  try {
-    // Corrigido: Adiciona /api/auth/login APÓS o API_URL base
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // Importante para enviar cookies
-      body: JSON.stringify(data),
-    });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text();
-      console.error("Resposta inesperada no login:", text);
-      throw new Error(`Resposta inesperada do servidor (${response.status}).`);
-    }
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error("Login failed:", {
-        status: response.status,
-        statusText: response.statusText,
-        error: result,
-      });
-      throw new Error(result.message || `Login failed with status ${response.status}`);
-    }
-
-    return result;
-  } catch (error: any) {
-    console.error("Login error catch:", error);
-    throw error;
-  }
+  // CORRIGIDO: Adiciona /api/auth/login APÓS o API_URL base
+  const response = await fetch(`${API_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include", // Importante para enviar cookies
+    body: JSON.stringify(data),
+  });
+  return handleApiResponse<AuthResponse>(response); // Usa helper
 };
 
 // Obter usuário atual
-export const getCurrentUser = async (): Promise<any|null> => {
+export const getCurrentUser = async (): Promise<AuthResponse['user'] | null> => {
   try {
-    // Corrigido: Adiciona /api/auth/me APÓS o API_URL base
-    const response = await fetch(`${API_URL}/api/auth/me`, {
-      credentials: "include", // Importante para enviar cookies
-    });
+    // CORRIGIDO: Adiciona /api/auth/me APÓS o API_URL base
+    const response = await fetch(`${API_URL}/api/auth/me`, { credentials: "include" });
 
-    // Se não estiver autenticado, devolve null silenciosamente
+    // Se não estiver autenticado, devolve null silenciosamente (tratado antes de parsear JSON)
     if (response.status === 401) {
       return null;
     }
+    
+    // Para status 200 ou outros erros > 401, usa o helper
+    const result = await handleApiResponse<AuthResponse>(response);
 
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      const text = await response.text();
-      console.error("Resposta inesperada no getCurrentUser:", text);
-      throw new Error("Resposta inesperada ao buscar usuário atual");
-    }
-
-    const result = await response.json();
-    if (!response.ok) {
-      console.error("Falha ao obter usuário atual:", result);
-      throw new Error(result.message || "Falha ao obter usuário atual");
-    }
-    
-    // A resposta do backend em /me retorna { success: true, user: { ... } }
-    return result.user; 
+    // Se a resposta foi OK e parseada, retorna o objeto user dentro dela
+    // O backend /api/auth/me retorna { success: true, user: {...} }
+    return result.user || null; // Retorna result.user ou null se user não existir inesperadamente
 
   } catch (error: any) {
-    // console.error("Error getting current user:", error); // Evitar logar erros 401 esperados
-    // A função Protect middleware já trata e retorna 401
+    // Loga erros que não são 401 (401 é retornado como null acima)
+    // Se o erro tem status e não é 401, ou se não tem status (erro de rede)
+    if (error.status !== 401) {
+        console.error("Error getting current user:", error);
+    }
     return null; // Retorna null em caso de qualquer erro, indicando não autenticado
   }
 };
 
 // Logout
-// Removida a definição duplicada de logout
+// CORRIGIDO: Função logout exportada e usando API_URL base correto
 export const logout = async (): Promise<void> => {
+  // CORRIGIDO: Adiciona /api/auth/logout APÓS o API_URL base
+  const response = await fetch(`${API_URL}/api/auth/logout`, {
+    method: 'POST',
+    credentials: 'include', // Importante para enviar cookies
+  });
+  
+  // Usa o helper para tratar a resposta. Espera 200/204 para sucesso.
   try {
-    // Corrigido: Adiciona /api/auth/logout APÓS o API_URL base
-    const response = await fetch(`${API_URL}/api/auth/logout`, {
-      method: 'POST',
-      credentials: 'include', // Importante para enviar cookies
-    });
-
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      // Mesmo que a resposta não seja JSON, se o status for OK, consideramos sucesso
-      if (response.ok) return; 
-      const text = await response.text();
-      console.error("Resposta inesperada no logout:", text);
-      throw new Error(`Resposta inesperada do servidor (${response.status}).`);
-    }
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error('Falha no logout:', result);
-      throw new Error(result.message || 'Failed to logout');
-    }
-  } catch (error: any) {
-    console.error('Logout error catch:', error);
-    throw error;
-  }
+      await handleApiResponse<any>(response); 
+  } catch (error: any) {
+      console.error('Logout error catch:', error);
+      throw error; // Re-lança o erro
+  }
 };
 
 
-// Verificar autenticação
-// Esta função agora depende apenas de getCurrentUser
+// Verificar autenticação (mantida)
 export const isAuthenticated = async (): Promise<boolean> => {
   const user = await getCurrentUser();
   return user !== null;
@@ -185,167 +163,74 @@ export const isAuthenticated = async (): Promise<boolean> => {
 
 // Obter o perfil completo do usuário
 export const getProfile = async (): Promise<any> => {
-  try {
-    // Corrigido: Adiciona /api/profile APÓS o API_URL base
-    // Note: O backend espera GET para /api/profile (sem sub-caminho adicional)
-    const response = await fetch(`${API_URL}/api/profile`, { 
-      credentials: 'include', // Importante para enviar cookies
-      headers: { 'Content-Type': 'application/json' }
-    });
+  // CORRIGIDO: Adiciona /api/profile/ (com a barra final) APÓS o API_URL base
+  // Isto é CRUCIAL para o erro 404 que você estava vendo!
+  const response = await fetch(`${API_URL}/api/profile/`, { 
+    credentials: 'include', // Importante para enviar cookies
+    headers: { 'Content-Type': 'application/json' }
+  });
 
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      const text = await response.text();
-      console.error("Resposta inesperada no getProfile:", text);
-      throw new Error(`Resposta inesperada do servidor (${response.status}).`);
-    }
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error("Erro ao carregar perfil:", error);
-      // Lança o erro do backend, que pode ser 401 se não estiver autenticado
-      const errorMessage = error.message || `Erro ao carregar perfil: Status ${response.status}`;
-      const httpError = new Error(errorMessage);
-      (httpError as any).status = response.status; // Adiciona o status para tratamento no Dashboard
-      throw httpError;
-    }
-
-    return await response.json();
-  } catch (error: any) {
-    console.error('getProfile error catch:', error);
-    throw error; // Re-lança o erro para ser tratado no componente que chama
-  }
+  // Usa helper para tratar a resposta. Espera { success: true, user: {...}, profile: {...}, interests: [...], ... }
+  return handleApiResponse<any>(response); 
 };
 
 
-// Atualizar informações pessoais
+// Funções de atualização de perfil (mantidas, apenas usando o API_URL base correto)
 export const updatePersonalInfo = async (data: any): Promise<any> => {
-  try {
-    // Corrigido: Adiciona /api/profile/personal-info APÓS o API_URL base
-    const response = await fetch(`${API_URL}/api/profile/personal-info`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Importante para enviar cookies
-      body: JSON.stringify(data),
-    });
-
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      if (response.ok) return response.json(); // Tenta parsear mesmo se Content-Type estiver estranho, se sucesso
-      const text = await response.text();
-      console.error("Resposta inesperada no updatePersonalInfo:", text);
-      throw new Error(`Resposta inesperada do servidor (${response.status}).`);
-    }
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error('updatePersonalInfo error payload:', result);
-      throw new Error(result.message || `Erro ao atualizar informações pessoais: Status ${response.status}`);
-    }
-
-    return result;
-  } catch (error: any) {
-    console.error('updatePersonalInfo error catch:', error);
-    throw error;
-  }
+  // CORRIGIDO: Adiciona /api/profile/personal-info APÓS o API_URL base
+  const response = await fetch(`${API_URL}/api/profile/personal-info`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', body: JSON.stringify(data),
+  });
+  return handleApiResponse<any>(response);
 };
 
-// Atualizar interesses
 export const updateInterests = async (data: any): Promise<any> => {
-  try {
-    // Corrigido: Adiciona /api/profile/interests APÓS o API_URL base
-    const response = await fetch(`${API_URL}/api/profile/interests`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Importante para enviar cookies
-      body: JSON.stringify(data),
-    });
-    
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      if (response.ok) return response.json();
-      const text = await response.text();
-      console.error("Resposta inesperada no updateInterests:", text);
-      throw new Error(`Resposta inesperada do servidor (${response.status}).`);
-    }
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error('updateInterests error payload:', result);
-      throw new Error(result.message || `Erro ao atualizar interesses: Status ${response.status}`);
-    }
-
-    return result;
-  } catch (error: any) {
-    console.error('updateInterests error catch:', error);
-    throw error;
-  }
+  // CORRIGIDO: Adiciona /api/profile/interests APÓS o API_URL base
+  const response = await fetch(`${API_URL}/api/profile/interests`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', body: JSON.stringify(data),
+  });
+  return handleApiResponse<any>(response);
 };
 
-// Atualizar atividades
 export const updateActivities = async (data: any): Promise<any> => {
-  try {
-    // Corrigido: Adiciona /api/profile/activities APÓS o API_URL base
-    const response = await fetch(`${API_URL}/api/profile/activities`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Importante para enviar cookies
-      body: JSON.stringify(data),
-    });
-
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      if (response.ok) return response.json();
-      const text = await response.text();
-      console.error("Resposta inesperada no updateActivities:", text);
-      throw new Error(`Resposta inesperada do servidor (${response.status}).`);
-    }
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error('updateActivities error payload:', result);
-      throw new Error(result.message || `Erro ao atualizar atividades: Status ${response.status}`);
-    }
-
-    return result;
-  } catch (error: any) {
-    console.error('updateActivities error catch:', error);
-    throw error;
-  }
+  // CORRIGIDO: Adiciona /api/profile/activities APÓS o API_URL base
+  const response = await fetch(`${API_URL}/api/profile/activities`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', body: JSON.stringify(data),
+  });
+  return handleApiResponse<any>(response);
 };
 
-// Atualizar conexões sociais
 export const updateSocialConnections = async (data: any): Promise<any> => {
-  try {
-    // Corrigido: Adiciona /api/profile/social-connections APÓS o API_URL base
-    const response = await fetch(`${API_URL}/api/profile/social-connections`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Importante para enviar cookies
-      body: JSON.stringify(data),
+  // CORRIGIDO: Adiciona /api/profile/social-connections APÓS o API_URL base
+  const response = await fetch(`${API_URL}/api/profile/social-connections`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', body: JSON.stringify(data),
+  });
+  return handleApiResponse<any>(response);
+};
+
+// ** Se você tem a lógica de login com Google em outro arquivo (ex: firebase.ts)
+// ** e essa lógica faz o fetch para o backend, certifique-se que esse outro arquivo
+// ** importa e usa o API_URL CORRETO definido aqui.
+
+// Exemplo de como seria a função googleLoginFrontendFlow se estivesse neste arquivo
+/*
+import { auth, googleProvider } from './firebase-config-file'; // Exemplo de importação do Firebase Auth
+
+export const googleLoginFrontendFlow = async (): Promise<AuthResponse> => {
+    const result = await signInWithPopup(auth, googleProvider); 
+    const token  = await result.user.getIdToken(); 
+
+    const response = await fetch(`${API_URL}/api/auth/google`, { // Usa API_URL corrigido
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json' },
+      credentials: 'include', 
+      body:        JSON.stringify({ token }) 
     });
 
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      if (response.ok) return response.json();
-      const text = await response.text();
-      console.error("Resposta inesperada no updateSocialConnections:", text);
-      throw new Error(`Resposta inesperada do servidor (${response.status}).`);
-    }
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error('updateSocialConnections error payload:', result);
-      throw new Error(result.message || `Erro ao atualizar conexões sociais: Status ${response.status}`);
-    }
-
-    return result;
-  } catch (error: any) {
-    console.error('updateSocialConnections error catch:', error);
-    throw error;
-  }
+    return handleApiResponse<AuthResponse>(response);
 };
+*/
