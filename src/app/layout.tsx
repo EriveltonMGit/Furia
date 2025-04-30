@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "./contexts/AuthContext"
-import { ThemeProvider } from "./components/theme-provider"
+import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from "react-hot-toast"
 import { ChatProvider } from "./components/chatFloat/chat-provider"
 import FloatingChatButton from "./components/chatFloat/floating-chat-button"
