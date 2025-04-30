@@ -37,33 +37,18 @@
 //   },
 // };
 
+// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors: true },
-  images: {
-    domains: ['furia-backend-8tck.onrender.com'],
-  },
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          { 
-            key: 'Access-Control-Allow-Origin', 
-            value: 'https://furia-wheat.vercel.app' 
-          },
-          { 
-            key: 'Access-Control-Allow-Credentials', 
-            value: 'true' 
-          },
-        ],
-      },
-    ];
-  },
-  env: {
-    NEXT_PUBLIC_API_URL: 'https://furia-backend-8tck.onrender.com',
-  },
-};
-
-export default nextConfig;
+    eslint: { ignoreDuringBuilds: true },
+    typescript: { ignoreBuildErrors: true },
+    images: {
+      domains: ['furia-backend-8tck.onrender.com'],
+    },
+    // Removido a seção headers - CORS é configurado no backend
+    env: {
+      NEXT_PUBLIC_API_URL: 'https://furia-backend-8tck.onrender.com',
+    },
+  };
+  
+  export default nextConfig;

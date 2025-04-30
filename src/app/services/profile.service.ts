@@ -1,6 +1,5 @@
 // URL base da API de perfil (usando a variável de ambiente para produção ou localhost)
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/profile';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 // Obter o perfil completo do usuário
 export const getProfile = async (): Promise<any> => {
   const response = await fetch(`${API_URL}/api/profile`, { 
