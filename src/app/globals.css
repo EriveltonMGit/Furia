@@ -1,9 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+*{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
 body {
-  font-family: Arial, Helvetica, sans-serif;
+   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  background-color: #000000;
+  
+  height:100svh;
 }
 
 @layer utilities {
@@ -92,3 +103,31 @@ body {
     @apply bg-background text-foreground;
   }
 }
+::-webkit-scrollbar {
+  width: 10px;/* Diminua o valor de largura aqui */
+  background-color: #111827;
+  animation: rotacionar 5s linear infinite;
+}
+
+::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(45deg,  #00FF00);
+  border-radius: 2px;
+  transition: 05s ease-in-out;
+  height: 5vh; /* Reduza o valor aqui se necessário */
+}
+
+/* FONTS  */
+@font-face {
+  font-family: 'Proelium';
+  src: url('/fonts/Proelium.otf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Purista';
+  src: url('/fonts/Purista\ Bold.otf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
