@@ -37,29 +37,18 @@
 //   },
 // };
 
+// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Ignorar erros de ESLint e TypeScript no build
-  eslint: { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors: true },
-
-  // Configuração de imagens (opcional)
-  images: {
-    unoptimized: true,
-    domains: ['localhost'],
-  },
-
-  // Logging só de erros
-  webpack: (config) => {
-    config.infrastructureLogging = { level: 'error' };
-    return config;
-  },
-
-  // Expor a variável ao browser
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-  },
-};
-
-export default nextConfig;
-
+    eslint: { ignoreDuringBuilds: true },
+    typescript: { ignoreBuildErrors: true },
+    images: {
+      domains: ['furia-backend-8tck.onrender.com'],
+    },
+    // Removido a seção headers - CORS é configurado no backend
+    env: {
+      NEXT_PUBLIC_API_URL: 'https://furia-backend-8tck.onrender.com',
+    },
+  };
+  
+  export default nextConfig;
