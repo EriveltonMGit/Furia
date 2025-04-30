@@ -133,7 +133,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col">
+    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col ">
       {/* Cabeçalho */}
       <header className="border-b border-[#222222] py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
