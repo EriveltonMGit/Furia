@@ -3,17 +3,17 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/pr
 
 // Obter o perfil completo do usuário
 export const getProfile = async (): Promise<any> => {
-  const response = await fetch(`${API_URL}/api/profile`, {
+  const response = await fetch(`${API_URL}/api/profile`, { 
     credentials: 'include',
+    headers: { 'Content-Type': 'application/json' }
   });
-  const result = await response.json();
 
   if (!response.ok) {
-    console.error('getProfile error payload:', result);
-    throw new Error(result.message || `Erro ao obter perfil: Status ${response.status}`);
+    const error = await response.json();
+    throw new Error(error.message || 'Erro ao carregar perfil');
   }
 
-  return result.profile;
+  return await response.json();
 };
 // Atualizar informações pessoais
 export const updatePersonalInfo = async (data: any): Promise<any> => {
@@ -85,4 +85,21 @@ export const updateSocialConnections = async (data: any): Promise<any> => {
   }
 
   return result;
+};
+// Logout corrigido
+export const logout = async (): Promise<void> => {
+  try {
+    const response = await fetch(`${API_URL}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const result = await response.json();
+      throw new Error(result.message || 'Failed to logout');
+    }
+  } catch (error) {
+    console.error('Logout error:', error);
+    throw error;
+  }
 };

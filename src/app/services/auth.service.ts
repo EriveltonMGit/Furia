@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000" || "https://furia-backend-8tck.onrender.com";  // Usando variável de ambiente ou localhost
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://furia-backend-8tck.onrender.com";
 
 interface RegisterData {
   name: string;
