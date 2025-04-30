@@ -28,7 +28,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // getProfile agora lançará um erro com o status 401 se não autorizado
+        // getProfile agora lançará um erro com o status 401 se não autorizad
         const profile = await getProfile()
         
         // Sua lógica de processamento de profile aqui (parece boa)
