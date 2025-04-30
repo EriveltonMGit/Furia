@@ -3,21 +3,18 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/pr
 
 // Obter o perfil completo do usuário
 export const getProfile = async (): Promise<any> => {
-  const response = await fetch(`${API_URL}`, {
+  const response = await fetch(`${API_URL}/api/profile`, {
     credentials: 'include',
   });
   const result = await response.json();
 
   if (!response.ok) {
-    // Log de erro detalhado
     console.error('getProfile error payload:', result);
     throw new Error(result.message || `Erro ao obter perfil: Status ${response.status}`);
   }
 
-  // Backend retorna { success, profile: profileData }
   return result.profile;
 };
-
 // Atualizar informações pessoais
 export const updatePersonalInfo = async (data: any): Promise<any> => {
   const response = await fetch(`${API_URL}/personal-info`, {
