@@ -92,39 +92,35 @@ export const login = async (data: LoginData): Promise<AuthResponse> => {
 };
 
 // Obter usuário atual corrigido
-export const getCurrentUser = async (showError: boolean = true): Promise<any> => {
+export const getCurrentUser = async (): Promise<any|null> => {
   try {
     const response = await fetch(`${API_URL}/api/auth/me`, {
       credentials: "include",
     });
 
-    const contentType = response.headers.get("content-type");
-    let result = null;
-
-    if (contentType && contentType.includes("application/json")) {
-      result = await response.json();
-    } else {
-      const text = await response.text();
-      if (showError) console.warn("Resposta não é JSON:", text);
+    // Se não estiver autenticado, devolve null silenciosamente
+    if (response.status === 401) {
+      return null;
     }
 
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      throw new Error("Resposta inesperada ao buscar usuário atual");
+    }
+
+    const result = await response.json();
     if (!response.ok) {
-      if (showError) {
-        console.error("Failed to get current user:", {
-          status: response.status,
-          statusText: response.statusText,
-          error: result,
-        });
-      }
-      throw new Error(result?.message || `Failed to get current user with status ${response.status}`);
+      throw new Error(result.message || "Falha ao obter usuário atual");
     }
 
-    return result?.user;
-  } catch (error) {
-    if (showError) console.error("Error getting current user:", error);
-    throw error;
+    return result.user;
+  } catch (error: any) {
+    // Se deu erro de rede ou JSON inválido, logue; mas 401 já virou null acima
+    console.error("Error getting current user:", error);
+    return null;
   }
 };
+
 
 
 
@@ -148,10 +144,6 @@ export const logout = async (): Promise<void> => {
 
 
 export const isAuthenticated = async (): Promise<boolean> => {
-  try {
-    await getCurrentUser(false); // não mostra erro no console
-    return true;
-  } catch {
-    return false;
-  }
+  const user = await getCurrentUser();
+  return user !== null;
 };

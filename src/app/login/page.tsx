@@ -1,10 +1,15 @@
+// src/app/login/page.tsx
 "use client";
+
 import { useState } from "react";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
+} from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
@@ -12,30 +17,41 @@ import { toast } from "react-hot-toast";
 
 export default function Login() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      await login(formData.email, formData.password);
+      const result = await login(formData.email, formData.password);
+      if (!result.success) throw new Error(result.message);
       toast.success('Login realizado com sucesso!');
       router.push("/dashboard");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Ocorreu um erro durante o login');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro durante o login');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await googleLogin();
+      if (!result.success) throw new Error(result.message);
+      toast.success('Login com Google realizado com sucesso!');
+      router.push("/dashboard");
+    } catch (err: any) {
+      toast.error(err.message || 'Erro no login com Google');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -101,12 +117,31 @@ export default function Login() {
                 className="w-full bg-[#00FF00] hover:bg-[#3ec53e] text-black"
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Entrando...
-                  </>
-                ) : "Entrar"}
+                {isLoading
+                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Entrando...</>
+                  : "Entrar"}
+              </Button>
+
+              {/* separation line */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-600"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-gray-800 px-2 text-gray-400">Ou continue com</span>
+                </div>
+              </div>
+
+              {/* Google login */}
+              <Button
+                type="button"
+                onClick={handleGoogleLogin}
+                className="w-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center"
+                disabled={googleLoading}
+              >
+                {googleLoading
+                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                  : <><FcGoogle className="mr-2 h-5 w-5"/>Entrar com Google</>}
               </Button>
 
               <p className="text-center text-sm text-gray-400">

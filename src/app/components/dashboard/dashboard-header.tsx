@@ -52,10 +52,14 @@ export function DashboardHeader({
       .join("")
       .toUpperCase();
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-  };
+      const handleLogout = async () => {
+        try {
+          await logout();          // espera o cookie ser removido
+          router.push("/login");
+        } catch (err) {
+          console.error("Erro ao sair:", err);
+        }
+      };
 
   // Função para fechar o menu mobile ao selecionar um item
   const handleMenuItemClick = (tabId: string) => {

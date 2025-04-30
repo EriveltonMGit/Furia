@@ -1,16 +1,18 @@
+// src/app/contexts/AuthContext.tsx
 "use client";
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  login as authLogin, 
-  logout as authLogout, 
-  getCurrentUser, 
+import {
+  login as authLogin,
+  logout as authLogout,
+  getCurrentUser,
   isAuthenticated as checkAuthStatus,
   register as authRegister,
   LoginData,
   AuthResponse
 } from '../services/auth.service';
+import { signInWithGoogle as firebaseGoogleLogin } from '../types/firebase';
 
-// Adicione esta interface para RegisterData
 interface RegisterData {
   name: string;
   email: string;
@@ -20,13 +22,13 @@ interface RegisterData {
 interface AuthContextType {
   user: any;
   loading: boolean;
-  login: (email: string, password: string) => Promise<AuthResponse>; // Alterado
+  login: (email: string, password: string) => Promise<AuthResponse>;
   register: (data: RegisterData) => Promise<AuthResponse>;
+  googleLogin: () => Promise<AuthResponse>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   isAuthenticated: boolean;
 }
-
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -37,21 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      try {
-        const authStatus = await checkAuthStatus();
-        setIsAuthenticated(authStatus);
-        if (authStatus) {
-          const userData = await getCurrentUser();
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
+      const userData = await getCurrentUser();
+      if (userData) {
+        setUser(userData);
+        setIsAuthenticated(true);
       }
+      setLoading(false);
     };
-
     initializeAuth();
   }, []);
 
@@ -83,6 +77,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const googleLogin = async (): Promise<AuthResponse> => {
+    setLoading(true);
+    try {
+      const result = await firebaseGoogleLogin();
+      if (result.success && result.user) {
+        setUser(result.user);
+        setIsAuthenticated(true);
+      }
+      return result;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     setLoading(true);
     try {
@@ -95,21 +103,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const checkAuth = async () => {
-    const authStatus = await checkAuthStatus();
-    setIsAuthenticated(authStatus);
-    return authStatus;
+    try {
+      const userData = await getCurrentUser();
+      if (userData) {
+        setUser(userData);
+        setIsAuthenticated(true);
+        return true;
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        return false;
+      }
+    } catch {
+      setUser(null);
+      setIsAuthenticated(false);
+      return false;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      login, 
-      register,
-      logout, 
-      checkAuth, 
-      isAuthenticated 
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        googleLogin,
+        logout,
+        checkAuth,
+        isAuthenticated
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -117,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
