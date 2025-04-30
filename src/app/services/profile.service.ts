@@ -1,25 +1,20 @@
-// services/profile.service.ts
-
-// URL base da API de perfil (rewrites do Next.js proxyam /api/profile → http://localhost:5000/api/profile)
-const API_URL = '/api/profile';
+// URL base da API de perfil (usando a variável de ambiente para produção ou localhost)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/profile';
 
 // Obter o perfil completo do usuário
 export const getProfile = async (): Promise<any> => {
-  const response = await fetch(`${API_URL}`, {
+  const response = await fetch(`${API_URL}/api/profile`, {
     credentials: 'include',
   });
   const result = await response.json();
 
   if (!response.ok) {
-    // opcional: log do payload de erro
     console.error('getProfile error payload:', result);
     throw new Error(result.message || `Erro ao obter perfil: Status ${response.status}`);
   }
 
-  // backend retorna { success, profile: profileData }
   return result.profile;
 };
-
 // Atualizar informações pessoais
 export const updatePersonalInfo = async (data: any): Promise<any> => {
   const response = await fetch(`${API_URL}/personal-info`, {
