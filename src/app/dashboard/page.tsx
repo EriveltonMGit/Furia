@@ -2,7 +2,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+// Importação correta do roteador para App Router
+import { useRouter } from "next/navigation" 
 import { Tabs, TabsContent } from "../components/ui/tabs"
 import { ProfileOverview } from "../components/dashboard/profile-overview"
 import { FanEngagement } from "../components/dashboard/fan-engagement"
@@ -13,13 +14,16 @@ import { DashboardSidebar } from "../components/dashboard/dashboard-sidebar"
 import ChatPage from "../chat/page" // Verifique o caminho real deste componente
 import ProtectedRoute from "../ProtectedRoute/ProtectedRoute" // Verifique o caminho real deste componente
 import CommunityPage from "../community/page" // Verifique o caminho real deste componente
-// Importe as funções de API do seu arquivo de serviço (corrigido)
-import { getProfile, logout } from "../services/profile.service" // Ajuste o caminho conforme necessário
+// Importe as funções de API do seu arquivo de serviço
+// Certifique-se que este arquivo (e as funções getProfile/logout nele) esteja corrigido conforme as orientações anteriores
+import { getProfile, logout } from "../services/profile.service" // Ajuste o caminho conforme necessário (ex: '../services/profile.service' ou '../services/api.service')
 import { Button } from "../components/ui/button" // Verifique o caminho real deste componente
 import { toast } from "react-hot-toast" // Verifique se você tem react-hot-toast instalado
 
 export default function Dashboard() {
-  const router = useRouter()
+  // Obtém a instância do roteador
+  const router = useRouter() 
+
   const [activeTab, setActiveTab] = useState("overview")
   const [userData, setUserData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -28,109 +32,98 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // getProfile agora lançará um erro com o status 401 se não autorizado
+        // Tenta carregar o perfil. getProfile deve lançar um erro com status 401 se não autenticado.
         const profile = await getProfile()
         
-        // Sua lógica de processamento de profile aqui (parece boa)
         if (!profile || !profile.user) {
-          // Isso pode acontecer se a API retornar OK, mas com dados inesperados
+          // Isso captura casos onde a API pode retornar 200, mas com dados inesperados/vazios
           throw new Error("Dados do usuário incompletos recebidos")
         }
 
+        // Se sucesso, define os dados do usuário e limpa o erro
         setUserData({
           user: {
             id: profile.user.id,
             name: profile.user.name,
             email: profile.user.email,
             role: profile.user.role,
-            created_at: profile.user.created_at // Assume que o backend retorna created_at
+            created_at: profile.user.created_at 
           },
           profile: profile.profile || {}, 
           profileCompletion: calculateProfileCompletion(profile),
-          // Use profile.user.created_at para memberSince
           memberSince: profile.user.created_at ? new Date(profile.user.created_at).toLocaleDateString('pt-BR', { 
             year: 'numeric', 
             month: 'long' 
           }) : 'Data desconhecida',
-          // Use os dados retornados pelo backend ou defaults
-          interests: profile.interests || [], // Defaults vazios ou específicos
+          interests: profile.interests || [], 
           socialConnections: profile.socialConnections || [], 
           upcomingEvents: profile.upcomingEvents || [],
           exclusiveOffers: profile.exclusiveOffers || [],
           recentActivity: profile.recentActivity || []
         })
-        setError(null)
+        setError(null) // Limpa qualquer erro anterior
       } catch (error: any) {
         console.error("Erro ao carregar perfil:", error)
+        // Define a mensagem de erro para exibição na UI
         setError(error.message || "Erro ao carregar dados do usuário")
         
-        // Verifica se é um erro 401 (Não autorizado)
-        if (error.status === 401) { // Usa a propriedade 'status' que adicionamos no erro
-          await logout() // Chama o logout para limpar cookies no frontend
+        // **Lógica para redirecionamento automático em caso de 401**
+        if (error.status === 401) { 
+          console.log("Erro 401 detectado, redirecionando para login...");
+          // Chama logout no frontend para limpar o cookie localmente (se existir no browser)
+          await logout(); 
           toast.error("Sessão expirada. Por favor, faça login novamente.")
-          router.push('/login')
+          // **Redireciona usando router.push (método preferencial do Next.js)**
+          // Se esta chamada falhar (devido ao erro "No router instance"), o catch abaixo do useEffect NÃO pega.
+          // O fallback está na função `redirectToLogin` usada no onClick do botão.
+          router.push('/login');
         } else {
-          // Para outros erros, talvez apenas exiba a mensagem e não redirecione
+          // Para outros erros, apenas exibe a mensagem (sem redirecionar automaticamente)
           toast.error(error.message || "Erro ao carregar dados.")
         }
       } finally {
-        setLoading(false)
+        setLoading(false) // Esconde o spinner de loading
       }
     }
 
     fetchProfile()
-  }, [router]) // Adicionado router como dependência por boa prática
+  }, [router]) // Adicionado router como dependência para boa prática com useEffect
 
-  // ... resto do componente Dashboard (calculateProfileCompletion, handleRetry, JSX)
+  // ... Funções auxiliares (calculateProfileCompletion, handleRetry) ...
+  // Função para calcular a completude do perfil (mantida)
   const calculateProfileCompletion = (profile: any) => {
-    // Implemente sua lógica de cálculo de completude do perfil
-    // Exemplo: verifica quais campos estão preenchidos
     let completion = 0;
-    const totalFields = 5; // Exemplo: nome, email, interesses, atividades, conexões
+    const totalFields = 5; 
     if (profile?.user?.name) completion += 1;
     if (profile?.user?.email) completion += 1;
     if (profile?.interests?.length > 0) completion += 1;
-    if (profile?.recentActivity?.length > 0) completion += 1; // Exemplo
-    if (profile?.socialConnections?.length > 0) completion += 1; // Exemplo
-
+    if (profile?.recentActivity?.length > 0) completion += 1; 
+    if (profile?.socialConnections?.length > 0) completion += 1;
     return Math.min(100, (completion / totalFields) * 100);
   }
 
+  // Função para tentar recarregar os dados (mantida)
   const handleRetry = async () => {
     setLoading(true)
     setError(null)
     try {
-      // A chamada aqui já usa a função getProfile corrigida
       const profile = await getProfile()
       if (!profile || !profile.user) {
         throw new Error("Dados do usuário incompletos recebidos ao tentar novamente")
       }
       setUserData({
-        user: {
-          id: profile.user.id,
-          name: profile.user.name,
-          email: profile.user.email,
-          role: profile.user.role,
-          created_at: profile.user.created_at
-        },
+        user: { id: profile.user.id, name: profile.user.name, email: profile.user.email, role: profile.user.role, created_at: profile.user.created_at },
         profile: profile.profile || {},
         profileCompletion: calculateProfileCompletion(profile),
-        memberSince: profile.user.created_at ? new Date(profile.user.created_at).toLocaleDateString('pt-BR', { 
-            year: 'numeric', 
-            month: 'long' 
-        }) : 'Data desconhecida',
-        interests: profile.interests || [],
-        socialConnections: profile.socialConnections || [],
-        upcomingEvents: profile.upcomingEvents || [],
-        exclusiveOffers: profile.exclusiveOffers || [],
-        recentActivity: profile.recentActivity || []
+        memberSince: profile.user.created_at ? new Date(profile.user.created_at).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' }) : 'Data desconhecida',
+        interests: profile.interests || [], socialConnections: profile.socialConnections || [], upcomingEvents: profile.upcomingEvents || [], exclusiveOffers: profile.exclusiveOffers || [], recentActivity: profile.recentActivity || []
       })
       setError(null)
       toast.success("Dados recarregados com sucesso!")
     } catch (error: any) {
       console.error("Erro ao tentar recarregar perfil:", error);
-      // Verifica se é um erro 401 ao tentar recarregar
       if (error.status === 401) {
+        console.log("Erro 401 detectado ao tentar novamente, redirecionando...");
         await logout();
         toast.error("Sessão expirada. Por favor, faça login novamente.");
         router.push('/login');
@@ -144,6 +137,21 @@ export default function Dashboard() {
   }
 
 
+  // **Função para redirecionar - usa router.push por padrão com fallback**
+  // Esta função é a chave para garantir que o botão funcione mesmo com o erro "No router instance found"
+  const redirectToLogin = () => {
+    try {
+      console.log("Attempting redirect with router.push");
+      router.push('/login');
+    } catch (e) {
+      console.error("router.push failed for button click, using window.location:", e);
+      // Fallback para redirecionamento nativo do navegador se router.push falhar
+      window.location.href = '/login'; 
+    }
+  };
+
+
+  // Renderiza o spinner de loading
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex items-center justify-center">
@@ -152,19 +160,22 @@ export default function Dashboard() {
     )
   }
 
+  // Renderiza a tela de erro se houver erro ou userData for null/undefined
   if (error || !userData) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex flex-col items-center justify-center gap-4 p-4">
         <p className="text-red-500 text-center">{error}</p>
         <div className="flex gap-4">
           <Button 
-            onClick={() => router.push('/login')} 
+            // **Usa a nova função redirectToLogin no onClick do botão**
+            onClick={redirectToLogin} 
             className="bg-[#00FF00] text-black hover:bg-[#00CC00]"
           >
             Ir para Login
           </Button>
-          {/* Mostra o botão de tentar novamente apenas se não for um erro 401 (sessão expirada) */}
-          {error && !error.includes('401') && ( // Ajuste a condição se a mensagem de erro 401 mudar
+          {/* Mostra o botão de tentar novamente apenas se não for um erro 401 (sessão expirada já redireciona automaticamente) */}
+          {/* A condição verifica se `error` existe, é uma string e NÃO inclui '401'. Ajuste a string '401' se a mensagem de erro mudar. */}
+          {error && typeof error === 'string' && !error.includes('401') && ( 
           <Button 
             onClick={handleRetry} 
             variant="outline" 
@@ -178,7 +189,7 @@ export default function Dashboard() {
     )
   }
 
-
+  // Conteúdo normal do dashboard se não houver erro e userData existir
   return (
     <ProtectedRoute> {/* Certifique-se de que ProtectedRoute envolva apenas o conteúdo que necessita de autenticação */}
       <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white">
@@ -188,32 +199,25 @@ export default function Dashboard() {
           <DashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
           <div className="flex-1">
-            {/* Use `defaultValue` ou `value` e `onValueChange` com o estado `activeTab` */}
+            {/* TabsList ficaria aqui, no DashboardSidebar ou em DashboardHeader dependendo do design */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
-              {/* TabsList ficaria aqui, no DashboardSidebar ou em DashboardHeader dependendo do design */}
-              
               <TabsContent value="overview" className="mt-0">
                 <ProfileOverview userData={userData} />
               </TabsContent>
-
               <TabsContent value="engagement" className="mt-0">
                 <FanEngagement userData={userData} />
               </TabsContent>
-
               <TabsContent value="offers" className="mt-0">
                 <ExclusiveOffers userData={userData} />
               </TabsContent>
-
               <TabsContent value="events" className="mt-0">
                 <UpcomingEvents userData={userData} />
               </TabsContent>
-
               <TabsContent value="community" className="mt-0 h-full">
-                <CommunityPage userData={userData} /> {/* Passe userData se necessário */}
+                <CommunityPage userData={userData} />
               </TabsContent>
-              
               <TabsContent value="chat" className="mt-0 h-full">
-                <ChatPage /> {/* Passe userData se necessário */}
+                <ChatPage />
               </TabsContent>
             </Tabs>
           </div>
