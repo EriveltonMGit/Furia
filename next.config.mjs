@@ -1,13 +1,18 @@
+// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  
+
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   images: {
     unoptimized: true,
     domains: ['localhost'],
   },
-
-  // 1) Proxy todas as /api para seu Express no 5000
+  webpack: (config) => {
+    config.infrastructureLogging = { level: 'error' };
+    return config;
+  },
   async rewrites() {
     return [
       {
@@ -16,26 +21,19 @@ const nextConfig = {
       },
     ];
   },
-
-  // 2) Cabeçalhos CORS + COOP
   async headers() {
     return [
       {
-        source: '/(.*)',    // **aplica a TODO** (inclui popups)
+        source: '/(.*)',
         headers: [
-          { key: 'Cross-Origin-Opener-Policy',   value: 'same-origin-allow-popups' },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin',      value: 'http://localhost:3000' },
-          { key: 'Access-Control-Allow-Methods',     value: 'GET,POST,PUT,DELETE,OPTIONS' },
-          { key: 'Access-Control-Allow-Headers',     value: 'Content-Type, Authorization' },
+          { key: 'Access-Control-Allow-Origin', value: 'http://localhost:3000' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
       },
     ];
-  },
-
-  webpack: (config) => {
-    config.infrastructureLogging = { level: 'error' };
-    return config;
   },
 };
 
