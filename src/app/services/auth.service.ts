@@ -1,6 +1,4 @@
-// services/auth.service.ts
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";  // Usando variável de ambiente ou localhost
 
 interface RegisterData {
   name: string;
@@ -29,7 +27,6 @@ export interface AuthResponse {
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
   try {
     const response = await fetch(`${API_URL}/api/auth/register`, {
-      // Note a mudança aqui
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -62,7 +59,6 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
 export const login = async (data: LoginData): Promise<AuthResponse> => {
   try {
     const response = await fetch(`${API_URL}/api/auth/login`, {
-      // Corrigido
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -79,9 +75,7 @@ export const login = async (data: LoginData): Promise<AuthResponse> => {
         statusText: response.statusText,
         error: result,
       });
-      throw new Error(
-        result.message || `Login failed with status ${response.status}`
-      );
+      throw new Error(result.message || `Login failed with status ${response.status}`);
     }
 
     return result;
@@ -115,19 +109,15 @@ export const getCurrentUser = async (): Promise<any|null> => {
 
     return result.user;
   } catch (error: any) {
-    // Se deu erro de rede ou JSON inválido, logue; mas 401 já virou null acima
     console.error("Error getting current user:", error);
     return null;
   }
 };
 
-
-
-
-
+// Logout corrigido
 export const logout = async (): Promise<void> => {
   try {
-    const response = await fetch(`${API_URL}/api/auth/logout`, { // Corrigido
+    const response = await fetch(`${API_URL}/api/auth/logout`, {
       method: 'POST',
       credentials: 'include',
     });
@@ -142,7 +132,7 @@ export const logout = async (): Promise<void> => {
   }
 };
 
-
+// Verificar autenticação
 export const isAuthenticated = async (): Promise<boolean> => {
   const user = await getCurrentUser();
   return user !== null;
