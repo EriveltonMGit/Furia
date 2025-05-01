@@ -4,9 +4,9 @@
 
 import { GoogleGenerativeAI, type Content, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import axios from 'axios';
-import dotenv from 'dotenv'; // Importa dotenv para carregar variáveis de ambiente
+// import dotenv from 'dotenv'; // Importa dotenv para carregar variáveis de ambiente
 
-dotenv.config(); // Carrega as variáveis do arquivo .env
+// dotenv.config(); // Carrega as variáveis do arquivo .env
 
 // 🔑 Configuração da API do Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
