@@ -49,7 +49,7 @@ export default function ChatMessage({ message, isTyping = false }: ChatMessagePr
         </Avatar>
       )}
       <div className={cn("max-w-[80%] rounded-lg p-3 ", isUser ? "bg-[#00FF00] text-black" : "bg-[#1A1A1A] text-white")}>
-        <div className="mb-1">
+        <div className="mb-1 ">
           <span className="font-medium">{isUser ? "Você" : "FURIA Bot"}</span>
           <span className="text-xs ml-2 opacity-70">{timestamp}</span>
         </div>

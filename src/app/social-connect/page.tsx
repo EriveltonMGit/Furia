@@ -103,19 +103,7 @@ export default function SocialConnect() {
               {currentStep === 2 && <GamingProfilesForm socialData={socialData} updateSocialData={updateSocialData} />}
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
-              Voltar
-            </Button>
-            <Button onClick={handleNext} className="bg-[#00FF00] hover:bg-[#00FF00]" disabled={!isStepComplete()}>
-              {currentStep === totalSteps ? "Finalizar" : "Próximo"}
-              {currentStep === totalSteps ? (
-                <CheckCircle2 className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowRight className="ml-2 h-4 w-4" />
-              )}
-            </Button>
-          </CardFooter>
+         
         </Card>
       </div>
     </div>

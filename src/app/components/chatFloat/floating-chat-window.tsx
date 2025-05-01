@@ -154,7 +154,7 @@ export default function FloatingChatWindow({ isOpen, onClose }: FloatingChatWind
   return (
     <div
       className={cn(
-        "fixed z-40 bottom-20 right-4 w-[350px] h-[500px] bg-[#111111] rounded-lg border border-[#222222] shadow-xl flex flex-col transition-all duration-300 transform",
+        "fixed z-40 bottom-20  right-4 w-[430px] h-[500px] bg-[#111111] rounded-lg border border-red-500shadow-xl flex flex-col transition-all duration-300 transform",
         isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
       )}
     >

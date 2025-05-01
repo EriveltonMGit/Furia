@@ -1,8 +1,9 @@
 // src/services/api.service.ts
 
 // Importações do Firebase Authentication (AJUSTE o caminho para o seu arquivo de configuração)
+// Mantenha apenas se estiver usando Firebase Auth no frontend para login Google
 import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from '../types/firebase'; // Exemplo de importação do Firebase Auth
+import { auth, googleProvider } from '../types/firebase'; // Exemplo de importação do Firebase Auth (AJUSTE O CAMINHO)
 
 // URL base da API (usando a variável de ambiente para produção ou localhost)
 // Deve ser apenas a base do backend (ex: https://furia-backend-8tck.onrender.com ou http://localhost:5000)
@@ -32,6 +33,22 @@ export interface AuthResponse {
   };
   error?: string;
 }
+
+// --- NOVA INTERFACE PARA DADOS DE REDES SOCIAIS E PERFIS DE JOGOS ---
+// Corresponde à estrutura do state socialData no frontend
+export interface SocialProfileData {
+  twitter: boolean;
+  instagram: boolean;
+  facebook: boolean;
+  discord: boolean;
+  twitch: boolean;
+  steamProfile: string;
+  faceitProfile: string;
+  hltv: string;
+  vlr: string;
+  otherProfiles: { platform: string; url: string }[];
+}
+
 
 // --- Funções Auxiliares ---
 
@@ -85,7 +102,7 @@ async function handleApiResponse<T>(response: Response): Promise<T> {
 
 // --- Funções de Autenticação ---
 
-// Registrar novo usuário
+// Registrar novo usuário (mantido do seu código)
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
   // Adiciona /api/auth/register APÓS o API_URL base
   const response = await fetch(`${API_URL}/api/auth/register`, {
@@ -97,18 +114,18 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
   return handleApiResponse<AuthResponse>(response); // Usa helper
 };
 
-// Login de usuário
+// Login de usuário (mantido do seu código)
 export const login = async (data: LoginData): Promise<AuthResponse> => {
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
-    return handleApiResponse<AuthResponse>(response);
-  };
+    const response = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+    return handleApiResponse<AuthResponse>(response);
+  };
 
-// Obter usuário atual
+// Obter usuário atual (mantido do seu código)
 export const getCurrentUser = async (): Promise<AuthResponse['user'] | null> => {
   try {
     // Adiciona /api/auth/me APÓS o API_URL base
@@ -136,7 +153,7 @@ export const getCurrentUser = async (): Promise<AuthResponse['user'] | null> => 
   }
 };
 
-// Logout
+// Logout (mantido do seu código)
 // Função logout exportada e usando API_URL base correto
 export const logout = async (): Promise<void> => {
   // Adiciona /api/auth/logout APÓS o API_URL base
@@ -155,7 +172,7 @@ export const logout = async (): Promise<void> => {
 };
 
 
-// Verificar autenticação
+// Verificar autenticação (mantido do seu código)
 export const isAuthenticated = async (): Promise<boolean> => {
   const user = await getCurrentUser();
   return user !== null;
@@ -164,7 +181,7 @@ export const isAuthenticated = async (): Promise<boolean> => {
 
 // --- Funções de Perfil ---
 
-// Obter o perfil completo do usuário
+// Obter o perfil completo do usuário (mantido do seu código)
 export const getProfile = async (): Promise<any> => {
   // Adiciona /api/profile/ (com a barra final) APÓS o API_URL base
   // Isto é CRUCIAL para o erro 404 que você estava vendo!
@@ -206,7 +223,8 @@ export const updateActivities = async (data: any): Promise<any> => {
   return handleApiResponse<any>(response);
 };
 
-export const updateSocialConnections = async (data: any): Promise<any> => {
+// Função updateSocialConnections - Ajustada para usar a nova interface SocialProfileData
+export const updateSocialConnections = async (data: SocialProfileData): Promise<any> => {
   // Adiciona /api/profile/social-connections APÓS o API_URL base
   const response = await fetch(`${API_URL}/api/profile/social-connections`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -216,11 +234,12 @@ export const updateSocialConnections = async (data: any): Promise<any> => {
 };
 
 
-// Função para o fluxo de login com Google no frontend
+// Função para o fluxo de login com Google no frontend (mantido do seu código)
 // Esta função interage com o Firebase Auth no frontend e envia o token para o backend
 export const googleLoginFrontendFlow = async (): Promise<AuthResponse> => {
   try {
     // Realiza o pop-up de login com Google usando Firebase Auth
+    // AJUSTE O CAMINHO DO auth e googleProvider SE NECESSÁRIO
     const result = await signInWithPopup(auth, googleProvider);
     // Obtém o token de ID do usuário logado
     const token = await result.user.getIdToken();
@@ -243,4 +262,3 @@ export const googleLoginFrontendFlow = async (): Promise<AuthResponse> => {
     throw error; // Re-lança o erro para ser tratado onde a função for chamada
   }
 };
-
