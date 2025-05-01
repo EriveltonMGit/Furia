@@ -473,6 +473,6 @@ function getRandomFact(): string {
         "arT é o capitão mais agressivo do CS2! 🧨",
         "FURIA tem a maior torcida do Brasil! 💚"
     ];
-    return facts[Math.floor(Math.random() * facts.length)];
+    return facts[Math.floor(Math.random() * facts.length)];;
 }
 
