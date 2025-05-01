@@ -48,7 +48,7 @@ export default function Footer() {
         </div>
 
         {/* Social + small print */}
-        <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-4  p-10">
           <p className="text-sm text-center md:text-left">
             &copy; {new Date().getFullYear()} FURIA CS:GO. Projeto de fãs, sem afiliação oficial com FURIA Esports.
           </p>
