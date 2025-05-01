@@ -77,19 +77,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const googleLogin = async (): Promise<AuthResponse> => {
-    setLoading(true);
-    try {
-      const result = await firebaseGoogleLogin();
-      if (result.success && result.user) {
-        setUser(result.user);
-        setIsAuthenticated(true);
-      }
-      return result;
-    } finally {
-      setLoading(false);
+  // Adicione esta função no AuthContext
+const googleLogin = async (): Promise<AuthResponse> => {
+  setLoading(true);
+  try {
+    const result = await firebaseGoogleLogin();
+    if (result.success && result.user) {
+      setUser(result.user);
+      setIsAuthenticated(true);
     }
-  };
+    return result;
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || 'Erro ao fazer login com Google'
+    };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const logout = async () => {
     setLoading(true);
