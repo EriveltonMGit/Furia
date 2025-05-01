@@ -4,9 +4,9 @@
 
 import { GoogleGenerativeAI, type Content, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import axios from 'axios';
-import dotenv from 'dotenv'; // Importa dotenv para carregar variáveis de ambiente
+// import dotenv from 'dotenv'; // Importa dotenv para carregar variáveis de ambiente
 
-dotenv.config(); // Carrega as variáveis do arquivo .env
+// dotenv.config(); // Carrega as variáveis do arquivo .env ..
 
 // 🔑 Configuração da API do Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -473,6 +473,6 @@ function getRandomFact(): string {
         "arT é o capitão mais agressivo do CS2! 🧨",
         "FURIA tem a maior torcida do Brasil! 💚"
     ];
-    return facts[Math.floor(Math.random() * facts.length)];
+    return facts[Math.floor(Math.random() * facts.length)];;
 }
 
