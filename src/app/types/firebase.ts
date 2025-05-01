@@ -32,19 +32,28 @@ if (typeof window !== 'undefined') {
 
 // Função para login com Google
 export const signInWithGoogle = async () => {
-    const result = await signInWithPopup(auth, googleProvider)
-    const token  = await result.user.getIdToken()
-  
-    const response = await fetch('/api/auth/google', {
-      method:      'POST',
-      headers:     { 'Content-Type': 'application/json' },
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const token = await result.user.getIdToken();
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body:        JSON.stringify({ token })
-    })
-    if (!response.ok) throw new Error('Falha na autenticação via Google')
-    return response.json() // { success, message, user }
+      body: JSON.stringify({ token })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Falha na autenticação via Google');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Google login error:", error);
+    throw error;
   }
-  
+};
 
 // Exporte apenas o necessário
-export { auth };
+export { auth, googleProvider };

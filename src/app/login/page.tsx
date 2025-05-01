@@ -46,6 +46,7 @@ export default function Login() {
     try {
       const result = await googleLogin();
       if (!result.success) throw new Error(result.message);
+      
       toast.success('Login com Google realizado com sucesso!');
       router.push("/dashboard");
     } catch (err: any) {
