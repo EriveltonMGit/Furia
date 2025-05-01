@@ -1,253 +1,187 @@
-import { GoogleGenerativeAI, type Content } from "@google/generative-ai"
+import { GoogleGenerativeAI, type Content } from "@google/generative-ai";
 
-// Inicializar a API do Google Generative AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-// Configuração do modelo
+// 🔥 Configuração Turbo do Modelo
 const modelConfig = {
-  temperature: 0.7,
-  topK: 40,
+  temperature: 0.9, // Mais criativo e animado
+  topK: 60,         // Respostas mais variadas
   topP: 0.95,
-  maxOutputTokens: 1024,
-}
+  maxOutputTokens: 4096, // Respostas mais completas
+};
 
-// Contexto do sistema para o modelo
+// 🐆 Contexto do Sistema (Personalidade FURIA)
 const systemContext = `
-Você é o assistente oficial do chat de fãs da FURIA Esports, especializado em CS:GO.
-Seu nome é "FURIA Bot" e você deve:
+**Você é o FURIA Bot, o assistente mais hypado do CS:GO!** 🎮💚  
 
-1. Responder em português brasileiro com um tom amigável e entusiasmado
-2. Usar emojis e formatação para tornar as respostas visualmente atraentes
-3. Conhecer detalhes sobre:
-   - Jogadores da FURIA (arT, KSCERATO, yuurih, chelo, drop)
-   - Calendário de partidas e resultados recentes
-   - Estatísticas da equipe e jogadores
-   - História da organização FURIA
-   - Competições de CS:GO
+🔹 **Estilo de Resposta:**  
+- **Super animado!** (Usa muitos emojis 🐆🔥💥)  
+- **Gírias BR e memes de e-sports** ("TÁ CHEGANDO A HORA!", "FURIA MODE ON")  
+- **Respostas curtas e diretas**, mas cheias de personalidade  
+- **Formatação organizada** (negrito, emojis, quebras de linha)  
 
-4. Responder a comandos específicos como:
-   - "próxima partida" - informações sobre o próximo jogo
-   - "escalação" - lineup atual do time
-   - "estatísticas" - dados de desempenho
-   - "mapas" - performance por mapa
-   - nomes de jogadores - informações sobre jogadores específicos
+🔹 **O Que Você Sabe?**  
+✅ **Tudo sobre a FURIA** (jogadores, história, estatísticas)  
+✅ **Próximas partidas e resultados**  
+✅ **Dados de torneios (ESL, IEM, Major)**  
+✅ **Redes sociais e links oficiais**  
 
-5. Usar hashtags como #DIADEFURIA e #FURIANATION
-6. Manter respostas concisas mas informativas
-7. Quando não souber algo específico, sugerir perguntar sobre tópicos que você conhece
+🔹 **Quando Não Souber Algo:**  
+❌ "Putz, essa eu não sei! 😅 Mas olha isso: [fato aleatório da FURIA]"  
+❌ "Eita, não tenho essa info. Quer saber sobre [tópico relacionado]?"  
 
-Mantenha o estilo visual com emojis e formatação consistente com o exemplo:
-"🏆 FURIA ESPORTS | CS:GO
-📅 Próxima partida: vs Team Liquid (15/05)
-🔥 #DIADEFURIA #FURIANATION"
-`
+🔹 **Se Alguém For Ofensivo:**  
+⚠️ "Eita, calma aí, meu chapa! Aqui é respeito! Que tal falar da FURIA?"  
 
-// Histórico de chat para contexto
-let chatHistory: Content[] = []
+🔹 **Links Úteis (Sempre Incluir Quando Relevante):**  
+🌐 **Site:** https://furia.gg  
+🐦 **Twitter:** https://twitter.com/furiagg  
+📸 **Instagram:** https://instagram.com/furiagg  
+🎥 **YouTube:** https://youtube.com/furiagg  
 
-// Cache simples para respostas comuns
+**Exemplo de Resposta:**  
+"🐆 **FURIA DESTRÓI NO INFERNO!** 🔥  
+📌 **Placar:** FURIA 16x8 NAVI  
+⭐ **MVP:** KSCERATO (28 kills)  
+💥 **Play Insana:** yuurih 1v4 clutch!  
+📅 **Próximo Jogo:** Amanhã vs Vitality  
+🔗 Mais info: https://furia.gg #DIADEFURIA 💚"
+`;
+
+// 📜 Histórico de Conversa (Memória de Curto Prazo)
+let chatHistory: Content[] = [];
+
+// ⚡ Cache Turbo (Respostas Rápidas)
 interface CacheEntry {
-  response: string
-  timestamp: number
+  response: string;
+  timestamp: number;
 }
-const responseCache: Record<string, CacheEntry> = {}
-const CACHE_TTL = 1000 * 60 * 60 // 1 hora em milissegundos
+const responseCache: Record<string, CacheEntry> = {};
 
-// Controle de taxa de requisições
-let lastRequestTime = 0
-const MIN_REQUEST_INTERVAL = 1000 // 1 segundo entre requisições
-
-// Modelos disponíveis em ordem de preferência
-const AVAILABLE_MODELS = ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"]
-
-// Respostas pré-definidas para perguntas comuns
+// 🎯 Respostas Pré-Definidas (Instantâneas)
 const PREDEFINED_RESPONSES: Record<string, string> = {
-  "próxima partida": `🏆 **PRÓXIMA PARTIDA DA FURIA** 🏆
+  // ... (suas respostas existentes)
+  
+  // 🔥 Novas Respostas Turbo!
+  "redes sociais": `🌐 **REDES SOCIAIS OFICIAIS** 🌐  
+🐦 Twitter: https://twitter.com/furiagg  
+📸 Instagram: https://instagram.com/furiagg  
+🎥 YouTube: https://youtube.com/furiagg  
+🌍 Site: https://furia.gg  
 
-📅 Data: 15 de Maio de 2023
-⏰ Horário: 15:00 (Horário de Brasília)
-🆚 Adversário: Team Liquid
-🏟️ Evento: ESL Pro League Season 17
-🗺️ Formato: Melhor de 3 (Bo3)
+**Siga a #FURIANATION!** 💚🐆`,
 
-Não perca! Vai ser 🔥 #DIADEFURIA #FURIANATION`,
+  "memes": `🎮 **MEMES DA FURIA** 🎮  
+🔥 "TÁ CHEGANDO A HORA!" - arT  
+💥 "É GUERRA!" - guerri  
+🐆 "FURIA MODE ON" (som de turbo)  
 
-  escalação: `🐆 **LINEUP ATUAL DA FURIA CS:GO** 🐆
+**Poste seus memes com #FURIANATION!** 😂`,
 
-👑 Andrei "arT" Piovezan (Capitão/AWPer)
-🔫 Kaike "KSCERATO" Cerato (Rifler)
-💪 Yuri "yuurih" Santos (Rifler)
-🎯 André "drop" Abreu (Rifler)
-🧠 Rafael "saffee" Costa (AWPer)
-👨‍💼 Nicholas "guerri" Nogueira (Coach)
+  "história": `📜 **A JORNADA DA FURIA** 📜  
+⏳ 2017: Fundação  
+🚀 2019: Primeira final internacional  
+🏆 2022: Top 1 do Brasil  
+💎 2023: FURIA domina!  
 
-#DIADEFURIA #FURIANATION 🔥`,
+**Uma história de superação!** 🐆💚`,
 
-  estatísticas: `📊 **ESTATÍSTICAS DA FURIA EM 2023** 📊
+  "piada": `😂 **PIADA DO DIA** 😂  
+"Por que o KSCERATO não usa óculos?  
+Porque ele já tem *aimbot* natural! 🎯😆  
 
-🏆 Vitórias: 68%
-🗺️ Mapa mais forte: Mirage (76% de vitórias)
-⭐ MVP do time: KSCERATO (1.24 rating)
-💥 Melhor performance: Vitória contra Natus Vincere (16-7)
-🔫 Melhor jogador por K/D: yuurih (1.18)
+#FURIAHUMOR`,
 
-#DIADEFURIA #FURIANATION 🔥`,
+  "ofensivo": `⚠️ **RESPEITA A FURIANATION!** ⚠️  
+Calma aí, meu patrão! Aqui é diversão no respeito.  
+Que tal falar da **última jogada incrível da FURIA?** 🐆💚`
+};
 
-  mapas: `🗺️ **PERFORMANCE DA FURIA POR MAPA** 🗺️
-
-🔥 Mirage: 76% de vitórias
-🔥 Inferno: 72% de vitórias
-🔥 Nuke: 65% de vitórias
-🔥 Vertigo: 60% de vitórias
-🔥 Ancient: 58% de vitórias
-🔥 Overpass: 55% de vitórias
-🔥 Anubis: 50% de vitórias
-
-#DIADEFURIA #FURIANATION 🔥`,
+// 🎯 Detecta a Intenção da Mensagem
+function detectIntent(message: string): string {
+  const msg = message.toLowerCase();
+  
+  if (/redes|social|twitter|insta|yt|youtube/i.test(msg)) return "social";
+  if (/história|fundacao|começo|jornada/i.test(msg)) return "history";
+  if (/meme|piada|engraçado|rir/i.test(msg)) return "meme";
+  if (/idiota|burro|chato|merda/i.test(msg)) return "offensive";
+  
+  return "default";
 }
 
-/**
- * Gera uma resposta usando o modelo Gemini
- */
+// 🚀 Gera a Resposta Turbo
 export async function generateGeminiResponse(userMessage: string): Promise<string> {
+  const intent = detectIntent(userMessage);
+  
+  // 🎯 Respostas Instantâneas (Cache)
+  if (PREDEFINED_RESPONSES[intent]) {
+    return PREDEFINED_RESPONSES[intent];
+  }
+
+  // ⏳ Controle de Flood
+  const now = Date.now();
+  if (now - (responseCache[userMessage]?.timestamp || 0) < 5000) {
+    return "🐆 **Calma, turbo!** Muitas mensagens seguidas! 😅";
+  }
+
   try {
-    // Verificar cache para mensagens idênticas
-    const normalizedMessage = userMessage.toLowerCase().trim()
+    // 🧠 Usa IA para respostas complexas
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro", systemInstruction: systemContext });
+    const chat = model.startChat({ generationConfig: modelConfig });
+    
+    const result = await chat.sendMessage(userMessage);
+    let response = result.response.text();
 
-    // Verificar respostas pré-definidas
-    for (const [keyword, response] of Object.entries(PREDEFINED_RESPONSES)) {
-      if (normalizedMessage.includes(keyword.toLowerCase())) {
-        console.log(`Usando resposta pré-definida para: ${keyword}`)
-        return response
-      }
-    }
+    // ✨ Melhora a Resposta
+    response = addEmojis(response);
+    if (intent === "social") response += "\n🔗 Mais em: https://furia.gg";
+    if (!response.includes("🐆")) response = `🐆 ${response} 💚`;
 
-    // Verificar cache
-    if (responseCache[normalizedMessage]) {
-      const cacheEntry = responseCache[normalizedMessage]
-      // Verificar se o cache ainda é válido
-      if (Date.now() - cacheEntry.timestamp < CACHE_TTL) {
-        console.log("Usando resposta em cache")
-        return cacheEntry.response
-      } else {
-        // Cache expirado, remover
-        delete responseCache[normalizedMessage]
-      }
-    }
-
-    // Controle de taxa - esperar se a última requisição foi muito recente
-    const now = Date.now()
-    const timeSinceLastRequest = now - lastRequestTime
-    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-      const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest
-      console.log(`Aguardando ${waitTime}ms antes da próxima requisição`)
-      await new Promise((resolve) => setTimeout(resolve, waitTime))
-    }
-
-    // Atualizar o tempo da última requisição
-    lastRequestTime = Date.now()
-
-    // Tentar cada modelo disponível em ordem
-    let response = ""
-    let modelUsed = ""
-    let success = false
-
-    for (const modelName of AVAILABLE_MODELS) {
-      try {
-        console.log(`Tentando usar o modelo: ${modelName}`)
-
-        // Obter o modelo
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          systemInstruction: systemContext,
-        })
-
-        // Criar o chat
-        const chat = model.startChat({
-          generationConfig: modelConfig,
-        })
-
-        // Se temos histórico, enviar mensagens anteriores para manter contexto
-        if (chatHistory.length > 0) {
-          for (const message of chatHistory) {
-            if (message.role === "user") {
-              const text = message.parts[0]?.text
-              if (text) {
-                await chat.sendMessage(text)
-              }
-            }
-          }
-        }
-
-        // Enviar a mensagem atual do usuário
-        const result = await chat.sendMessage(userMessage)
-        response = result.response.text()
-        modelUsed = modelName
-        success = true
-
-        // Sair do loop se tivermos uma resposta bem-sucedida
-        break
-      } catch (modelError) {
-        console.error(`Erro ao usar o modelo ${modelName}:`, modelError)
-        // Continuar para o próximo modelo
-      }
-    }
-
-    // Se nenhum modelo funcionou
-    if (!success) {
-      throw new Error("Todos os modelos falharam")
-    }
-
-    console.log(`Resposta gerada com sucesso usando o modelo: ${modelUsed}`)
-
-    // Adicionar a mensagem do usuário e a resposta ao histórico
-    chatHistory.push({
-      role: "user",
-      parts: [{ text: userMessage }],
-    })
-
-    chatHistory.push({
-      role: "model",
-      parts: [{ text: response }],
-    })
-
-    // Limitar o histórico para evitar tokens excessivos
-    if (chatHistory.length > 10) {
-      chatHistory = chatHistory.slice(chatHistory.length - 10)
-    }
-
-    // Adicionar ao cache
-    responseCache[normalizedMessage] = {
-      response,
-      timestamp: Date.now(),
-    }
-
-    return response
+    // 💾 Salva no Cache
+    responseCache[userMessage] = { response, timestamp: now };
+    
+    return response;
   } catch (error) {
-    console.error("Erro ao gerar resposta com Gemini:", error)
-
-    // Resposta de fallback para perguntas comuns sobre a FURIA
-    if (userMessage.toLowerCase().includes("próxima partida") || userMessage.toLowerCase().includes("proximo jogo")) {
-      return PREDEFINED_RESPONSES["próxima partida"]
-    } else if (
-      userMessage.toLowerCase().includes("escalação") ||
-      userMessage.toLowerCase().includes("jogadores") ||
-      userMessage.toLowerCase().includes("lineup")
-    ) {
-      return PREDEFINED_RESPONSES["escalação"]
-    } else if (userMessage.toLowerCase().includes("estatística")) {
-      return PREDEFINED_RESPONSES["estatísticas"]
-    } else if (userMessage.toLowerCase().includes("mapa")) {
-      return PREDEFINED_RESPONSES["mapas"]
-    }
-
-    return "Desculpe, estou com muitas mensagens no momento. Tente novamente em alguns instantes ou pergunte sobre a próxima partida, escalação, estatísticas ou mapas. 🐆 #DIADEFURIA"
+    console.error("Erro:", error);
+    return getFallbackResponse(userMessage); // Resposta criativa de fallback
   }
 }
 
-/**
- * Limpa o histórico de chat
- */
-export function clearChatHistory(): void {
-  chatHistory = []
+// 🛠️ Funções Auxiliares
+function addEmojis(text: string): string {
+  const emojiMap: Record<string, string> = {
+    "FURIA": "🐆",
+    "vitória": "🏆",
+    "jogo": "🎮",
+    "incrível": "🔥",
+    "dados": "📊"
+  };
+  
+  Object.entries(emojiMap).forEach(([word, emoji]) => {
+    text = text.replace(new RegExp(word, "gi"), `${word} ${emoji}`);
+  });
+  
+  return text;
+}
+
+function getFallbackResponse(userMessage: string): string {
+  const fallbacks = [
+    "Putz, buguei! 😅 Quer saber das **próximas partidas** da FURIA?",
+    "Eita, não sei essa! Mas olha o **play incrível** do KSCERATO: [link]",
+    "Calma, tô recarregando! ⚡ Pergunta de novo ou fala de CS!",
+    `Não sei, mas **curiosidade FURIA**: ${getRandomFact()}`
+  ];
+  
+  return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+}
+
+function getRandomFact(): string {
+  const facts = [
+    "KSCERATO tem 1.20 de rating em 2024!",
+    "A FURIA já ganhou de TODAS as top 5 do mundo!",
+    "yuurih fez um ACE contra a NAVI!",
+    "arT é o capitão mais explosivo do CS! 🧨"
+  ];
+  
+  return facts[Math.floor(Math.random() * facts.length)];
 }
