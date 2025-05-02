@@ -114,7 +114,7 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       <h3 className="text-lg font-medium">Verificação Facial</h3>
       <p className="text-sm text-gray-400">Tire uma selfie para verificarmos que você é a pessoa nos documentos</p>
 

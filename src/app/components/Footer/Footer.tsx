@@ -55,7 +55,7 @@ export default function Footer() {
 
           <div className="flex space-x-4">
             <a
-              href="https://www.facebook.com/furiaesports"
+              href="https://www.facebook.com/"
               target="_blank"
               rel="noreferrer"
               aria-label="FURIA Esports no Facebook"
@@ -63,7 +63,7 @@ export default function Footer() {
               <FaFacebookF className="h-5 w-5 hover:text-white transition-colors" />
             </a>
             <a
-              href="https://www.instagram.com/furia"
+              href="https://www.instagram.com/furiagg/?hl=en"
               target="_blank"
               rel="noreferrer"
               aria-label="FURIA Esports no Instagram"
@@ -71,7 +71,7 @@ export default function Footer() {
               <FaInstagram className="h-5 w-5 hover:text-white transition-colors" />
             </a>
             <a
-              href="https://twitter.com/furia"
+              href="https://x.com/FURIA"
               target="_blank"
               rel="noreferrer"
               aria-label="FURIA Esports no Twitter"
@@ -79,7 +79,7 @@ export default function Footer() {
               <FaTwitter className="h-5 w-5 hover:text-white transition-colors" />
             </a>
             <a
-              href="https://www.youtube.com/c/FURIAesports"
+              href="https://youtube.com/furiagg"
               target="_blank"
               rel="noreferrer"
               aria-label="FURIA Esports no YouTube"
@@ -87,7 +87,7 @@ export default function Footer() {
               <FaYoutube className="h-5 w-5 hover:text-white transition-colors" />
             </a>
             <a
-              href="https://www.twitch.tv/furiagg"
+              href="https://www.twitch.tv/furiatv"
               target="_blank"
               rel="noreferrer"
               aria-label="FURIA Esports na Twitch"

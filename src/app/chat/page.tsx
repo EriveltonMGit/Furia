@@ -162,17 +162,13 @@ export default function ChatPage() {
 
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col ">
+    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col overflow-hidden relative ">
       {/* Cabeçalho */}
-      <header className="border-b border-[#222222] py-4">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <Button variant="ghost" size="icon" asChild className="mr-2">
-              <Link href="/dashboard">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-            <h1 className="text-xl font-bold text-[#00FF00]">Chat de Fãs da FURIA</h1>
+      <header className="border-b border-[#222222] py-1 md:py-3 lg:py-4 border overflow-hidden relative ">
+        <div className="container mx-auto px-2 flex flex-col justify-between items-start ">
+          <div className="flex items-start justify-start gap-3  w-[100% ">
+           
+            <h1 className="text-xl font-bold text-[#00FF00] mx-0">Chat de Fãs da FURIA</h1>
              {/* ✅ Exibir nome do usuário logado */}
             {user && <span className="ml-2 text-sm text-gray-400">Olá, {user.name}!</span>}
           </div>
@@ -184,11 +180,11 @@ export default function ChatPage() {
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 container mx-auto px-4 py-6 flex flex-col md:flex-row gap-6">
+      <div className="flex-1 container mx-auto px-4 py-6 flex flex-col md:flex-row gap-4 ">
         {/* Barra Lateral */}
-        <div className="w-full md:w-64 lg:w-80">
-          <Tabs defaultValue="chat" className="w-full">
-            <TabsList className="grid grid-cols-4 mb-6 bg-[#111111]">
+        <div className="w-full md:w-64 lg:w-80  ">
+          <Tabs defaultValue="chat" className="w-full ">
+            <TabsList className="grid grid-cols-4 mb-6 bg-[#111111] ">
               <TabsTrigger value="chat" className="data-[state=active]:bg-[#00FF00] data-[state=active]:text-black">
                 <MessageSquare className="h-5 w-5" />
               </TabsTrigger>
@@ -272,7 +268,11 @@ export default function ChatPage() {
               <div className="bg-[#111111] rounded-lg border border-[#222222] p-4">
                 <h3 className="text-lg font-medium mb-4">Comunidade de Fãs</h3>
                 <p className="text-gray-400 mb-4">Conecte-se com outros fãs da FURIA e participe da conversa.</p>
-                <Button className="w-full bg-[#00FF00] text-black hover:bg-[#00CC00]">Entrar na Comunidade Discord</Button> {/* Link estático */}
+                <Button className="w-full bg-[#00FF00] text-black hover:bg-[#00CC00]">
+                <Link href={'https://discord.com/invite/furia'} target="_blank" rel="noopener noreferrer">
+                  Entrar na Comunidade Discord
+                </Link>
+                  </Button> 
               </div>
             </TabsContent>
           </Tabs>

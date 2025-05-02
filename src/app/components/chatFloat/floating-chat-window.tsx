@@ -153,11 +153,13 @@ export default function FloatingChatWindow({ isOpen, onClose }: FloatingChatWind
 
   return (
     <div
-      className={cn(
-        "fixed z-40 bottom-20  right-4 w-[430px] h-[500px] bg-[#111111] rounded-lg border border-red-500shadow-xl flex flex-col transition-all duration-300 transform",
-        isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
-      )}
-    >
+  className={cn(
+    "fixed z-40 bg-[#111111] rounded-lg shadow-xl flex flex-col transition-all duration-300 transform",
+    "bottom-4 right-4 w-[calc(100vw-2rem)] h-[80vh] max-w-[340px] max-h-[700px]", // Mobile first
+    "md:bottom-20 md:right-4 md:w-[330px] md:h-[500px]", // Desktop
+    isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+  )}
+>
       {/* Cabeçalho */}
       <div className="p-3 border-b border-[#222222] bg-[#0A0A0A] rounded-t-lg flex justify-between items-center">
         <div className="flex items-center">
