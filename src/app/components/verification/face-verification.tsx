@@ -1,38 +1,36 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-
-import { Card, CardContent } from "../../components/ui/card"
-import { Camera, Check, RefreshCw, AlertCircle } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
-// import { Button } from "react-day-picker" // <-- Remove this import
+import { useState, useRef, useEffect } from "react";
+import { Card, CardContent } from "../../components/ui/card";
+import { Camera, Check, RefreshCw, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
 
 interface FaceVerificationProps {
   verificationData: {
-    idDocument: File | null
-    selfie: File | null
-    addressProof: File | null
-    faceVerified: boolean
-  }
-  updateVerificationData: (data: Partial<FaceVerificationProps["verificationData"]>) => void
+    idDocument: File | null;
+    selfie: File | null;
+    addressProof: File | null;
+    faceVerified: boolean;
+  };
+  updateVerificationData: (data: Partial<FaceVerificationProps["verificationData"]>) => void;
 }
 
 export function FaceVerification({ verificationData, updateVerificationData }: FaceVerificationProps) {
-  const [stream, setStream] = useState<MediaStream | null>(null)
-  const [capturedImage, setCapturedImage] = useState<string | null>(null)
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [verificationError, setVerificationError] = useState<string | null>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     return () => {
       // Clean up stream when component unmounts
       if (stream) {
-        stream.getTracks().forEach((track) => track.stop())
+        stream.getTracks().forEach((track) => track.stop());
       }
-    }
-  }, [stream])
+    };
+  }, [stream]);
 
   const startCamera = async () => {
     try {
@@ -42,76 +40,92 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
           height: { ideal: 720 },
           facingMode: "user",
         },
-      })
-      setStream(mediaStream)
+      });
+      setStream(mediaStream);
 
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
+        videoRef.current.srcObject = mediaStream;
       }
     } catch (err) {
-      console.error("Error accessing camera:", err)
-      setVerificationError("Não foi possível acessar a câmera. Verifique as permissões do navegador.")
+      console.error("Error accessing camera:", err);
+      setVerificationError("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
     }
-  }
+  };
 
   const stopCamera = () => {
     if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
-      setStream(null)
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
     }
-  }
+  };
 
   const captureImage = () => {
     if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current
-      const canvas = canvasRef.current
-      const context = canvas.getContext("2d")
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
 
       if (context) {
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        context.drawImage(video, 0, 0, canvas.width, canvas.height)
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const imageDataUrl = canvas.toDataURL("image/png")
-        setCapturedImage(imageDataUrl)
+        const imageDataUrl = canvas.toDataURL("image/png");
+        setCapturedImage(imageDataUrl);
 
         // Convert data URL to File object
         canvas.toBlob((blob) => {
           if (blob) {
-            const file = new File([blob], "selfie.png", { type: "image/png" })
-            updateVerificationData({ selfie: file })
+            const file = new File([blob], "selfie.png", { type: "image/png" });
+            updateVerificationData({ selfie: file });
           }
-        }, "image/png")
+        }, "image/png");
 
-        stopCamera()
+        stopCamera();
       }
     }
-  }
+  };
 
   const resetCapture = () => {
-    setCapturedImage(null)
-    updateVerificationData({ selfie: null })
-    startCamera()
-  }
+    setCapturedImage(null);
+    updateVerificationData({ selfie: null });
+    startCamera();
+  };
 
-  const verifyFace = () => {
-    setIsVerifying(true)
-    setVerificationError(null)
+  const verifyFace = async () => {
+    setIsVerifying(true);
+    setVerificationError(null);
 
-    // Simulate AI verification process
-    setTimeout(() => {
-      // In a real app, this would be an API call to a face verification service
-      const success = Math.random() > 0.2 // 80% success rate for demo
+    if (!verificationData.idDocument || !verificationData.selfie) {
+      setVerificationError("Por favor, envie o documento de identidade e capture a selfie.");
+      setIsVerifying(false);
+      return;
+    }
 
-      if (success) {
-        updateVerificationData({ faceVerified: true })
+    const formData = new FormData();
+    formData.append("idDocument", verificationData.idDocument);
+    formData.append("selfie", verificationData.selfie);
+
+    try {
+      const response = await fetch("/api/verification/verify-identity", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        updateVerificationData({ faceVerified: data.faceVerified });
       } else {
-        setVerificationError("Não foi possível verificar seu rosto. Por favor, tente novamente com melhor iluminação.")
+        setVerificationError(data.message || "Erro ao verificar a identidade.");
       }
-
-      setIsVerifying(false)
-    }, 2000)
-  }
+    } catch (error) {
+      console.error("Erro ao enviar para verificação:", error);
+      setVerificationError("Não foi possível conectar ao servidor de verificação.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   return (
     <div className="space-y-6 ">
@@ -222,5 +236,5 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
         </AlertDescription>
       </Alert>
     </div>
-  )
+  );
 }
