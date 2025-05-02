@@ -107,7 +107,7 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
     formData.append("selfie", verificationData.selfie);
 
     try {
-      const response = await fetch("/api/verification/verify-identity", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/verification/verify-identity`, {
         method: "POST",
         body: formData,
       });
