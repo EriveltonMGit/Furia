@@ -19,5 +19,3 @@ export async function generateChatResponse(message: string, userName?: string): 
   }
 }
 
-// Se você quiser que a função clearChatHistory seja acessível via lib/chat.ts, exporte-a aqui:
-// export { clearChatHistory }; // ✅ Mantenha esta linha se o seu frontend chama clearChatHistory via lib/chat

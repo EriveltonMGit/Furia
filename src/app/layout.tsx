@@ -7,6 +7,7 @@ import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from "react-hot-toast"
 import { ChatProvider } from "./components/chatFloat/chat-provider"
 import FloatingChatButton from "./components/chatFloat/floating-chat-button"
+import FloatingWhatsappButton from "./components/whatsappFloat/floating-whatsapp-button"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,8 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ChatProvider>
               <Toaster position="top-right" />
               {children}
+             
               <FloatingChatButton />
             </ChatProvider>
+            
           </ThemeProvider>
         </AuthProvider>
       </body>

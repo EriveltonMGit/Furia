@@ -9,6 +9,7 @@ import CTASection from "./components/CTASection/CTASection";
 import Footer from "./components/Footer/Footer";
 import LatestNews from "./components/latest-news";
 
+
 export default function Home() {
   return (
     <>
@@ -19,6 +20,7 @@ export default function Home() {
         <BenefitsSection />
         <LatestNews />
         <CTASection />
+        
       </section>
       {/* O footer estava fora da seção principal  */}
       <Footer />

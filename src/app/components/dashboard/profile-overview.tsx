@@ -17,6 +17,7 @@ import {
   User,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key } from "react";
 
 // Tipos de dados (mantidos como estão)
 type VerificationStatus = "verified" | "pending" | "unverified";
@@ -43,14 +44,23 @@ interface Activity {
 }
 
 interface UserProfileData {
+    user: any;
   name: string;
   email: string;
   profileCompletion: number; // Deveria ser um número (0-100)
   verificationStatus: VerificationStatus;
   fanLevel: string;
+  created_at: string; 
+    updated_at: string;
+  interests: {
+        favoriteGames: string[];
+        favoriteTeams: string[];
+        followedPlayers: string[];
+        preferredPlatforms: string[];
+      };
   fanPoints: number;
   memberSince: string; // Esperamos uma string formatada ou parseável (ex: ISO 8601, "YYYY-MM-DD")
-  interests: string[];
+
   socialConnections: string[];
   upcomingEvents: Event[];
   exclusiveOffers: Offer[];
@@ -64,33 +74,80 @@ interface ProfileOverviewProps {
 
 // Dados padrão para quando não houver dados (mantidos como estão)
 const defaultUserData: UserProfileData = {
-  name: "Usuário",
-  email: "usuario@exemplo.com",
-  profileCompletion: 0,
-  verificationStatus: "unverified",
-  fanLevel: "Iniciante",
-  fanPoints: 0,
-  // Ajuste no default: Usar um formato de data mais consistente para o default
-  // ou garantir que toLocaleDateString() no default funcione (o que já deveria)
-  memberSince: new Date().toISOString(), // Usar ISO string para o default, que é facilmente parseável
-  interests: [],
-  socialConnections: [],
-  upcomingEvents: [],
-  exclusiveOffers: [],
-  recentActivity: [],
+    name: "Usuário",
+    email: "usuario@exemplo.com",
+    profileCompletion: 0,
+    verificationStatus: "unverified",
+    fanLevel: "Iniciante",
+    fanPoints: 0,
+    // Ajuste no default: Usar um formato de data mais consistente para o default
+    // ou garantir que toLocaleDateString() no default funcione (o que já deveria)
+    memberSince: new Date().toISOString(), // Usar ISO string para o default, que é facilmente parseável
+    created_at: new Date().toISOString(), // <-- Valor padrão
+    updated_at: new Date().toISOString(),
+    interests: {
+        favoriteGames: [],
+        favoriteTeams: [],
+        followedPlayers: [],
+        preferredPlatforms: []
+    },
+    socialConnections: [],
+    upcomingEvents: [],
+    exclusiveOffers: [],
+    recentActivity: [],
+    user: undefined
 };
 
 export function ProfileOverview({ userData = {}, loading = false }: ProfileOverviewProps) {
   // Mescla os dados recebidos com os padrões
   const mergedData: UserProfileData = { ...defaultUserData, ...userData };
-
+  function renderSocialConnections() {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {['Twitter', 'Facebook', 'Instagram', 'Twitch'].map((network) => (
+          <Badge key={network} variant="outline" className="bg-gray-700 text-white border-gray-600">
+            {network}
+          </Badge>
+        ))}
+      </div>
+    );
+  }
   // --- Ajustes de Formatação ---
-
+// Função auxiliar para formatar timestamps do Firebase ou strings de data
+const formatTimestampOrDateString = (timestampOrDateString: any): string => {
+        if (timestampOrDateString) {
+          // Tenta formatar timestamp do Firebase
+          if (typeof timestampOrDateString === 'object' && timestampOrDateString._seconds !== undefined) {
+            try {
+              const date = new Date(timestampOrDateString._seconds * 1000); // Segundos para milissegundos
+              if (!isNaN(date.getTime())) {
+                return date.toLocaleDateString('pt-BR');
+              }
+            } catch (e) {
+              console.error("Erro ao formatar timestamp Firebase:", timestampOrDateString, e);
+            }
+          }
+    
+          // Tenta formatar como string de data padrão
+          try {
+            const date = new Date(timestampOrDateString);
+            if (!isNaN(date.getTime())) {
+              return date.toLocaleDateString('pt-BR');
+            }
+          } catch (e) {
+            console.error("Erro ao formatar data string:", timestampOrDateString, e);
+          }
+        }
+        return "N/A"; // <-- Retorna "N/A" se a data for inválida ou inexistente
+      };
+    
+    // ... outras variáveis formatadas ...
+    
+    let memberSinceFormatted = formatTimestampOrDateString(mergedData.user?.created_at); // <-- Usa a função de formatação
   // Formatar o percentual de completude para uma casa decimal
   const profileCompletionFormatted = mergedData.profileCompletion.toFixed(1);
 
-  // Formatar a data de "Membro desde"
-  let memberSinceFormatted = "N/A"; // Texto padrão caso a data seja inválida
+
   try {
       const memberSinceDate = new Date(mergedData.memberSince);
       // Verifica se a data é válida ( getTime() para NaN é o método confiável)
@@ -202,56 +259,165 @@ export function ProfileOverview({ userData = {}, loading = false }: ProfileOverv
               </Card>
 
               {/* Seus Interesses (mantido como está) */}
-              <Card className="bg-gray-800 border-gray-700">
-                   {/* ... Código dos Interesses ... */}
-                   <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Seus Interesses</CardTitle>
-                      <CardDescription>Jogos e times que você segue</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      <div className="space-y-4">
-                          <div>
-                              <h4 className="text-sm font-medium mb-2">Jogos</h4>
-                              <div className="flex flex-wrap gap-2">
-                                  {mergedData.interests.length > 0 ? (
-                                      mergedData.interests.map((interest, idx) => (
-                                          <Badge
-                                              key={idx}
-                                              variant="outline"
-                                              className="bg-gray-700"
-                                          >
-                                              {interest}
-                                          </Badge>
-                                      ))
-                                  ) : (
-                                      <p className="text-sm text-gray-400">Nenhum interesse cadastrado</p>
-                                  )}
-                              </div>
-                          </div>
+                 {/* Seus Interesses */}
 
-                          <div>
-                              <h4 className="text-sm font-medium mb-2">
-                                  Redes Sociais Conectadas
-                              </h4>
-                              <div className="flex flex-wrap gap-2">
-                                  {mergedData.socialConnections.length > 0 ? (
-                                      mergedData.socialConnections.map((conn, idx) => (
-                                          <Badge
-                                              key={idx}
-                                              variant="outline"
-                                              className="bg-gray-700"
-                                          >
-                                              {conn}
-                                          </Badge>
-                                      ))
-                                  ) : (
-                                      <p className="text-sm text-gray-400">Nenhuma conexão</p>
-                                  )}
-                              </div>
-                          </div>
-                      </div>
-                  </CardContent>
-              </Card>
+        <Card className="bg-gray-800 border-gray-700">
+
+          <CardHeader className="pb-2">
+
+            <CardTitle className="text-lg text-white">Seus Interesses</CardTitle>
+
+            <CardDescription className="text-gray-400">Jogos e times que você segue</CardDescription>
+
+          </CardHeader>
+
+          <CardContent>
+
+            <div className="space-y-4">
+
+              {/* Jogos Favoritos */}
+
+              <div>
+
+                <h4 className="text-sm font-medium mb-2 text-white">Jogos Favoritos</h4>
+
+                {mergedData.interests?.favoriteGames?.length > 0 ? (
+
+                  <div className="flex flex-wrap gap-2">
+
+                    {mergedData.interests.favoriteGames.map((game: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, idx: Key | null | undefined) => (
+
+                      <Badge key={idx} variant="outline" className="bg-gray-700 text-white border-gray-600">
+
+                        {game}
+
+                      </Badge>
+
+                    ))}
+
+                  </div>
+
+                ) : (
+
+                  <p className="text-sm text-gray-400">Nenhum jogo cadastrado</p>
+
+                )}
+
+              </div>
+
+
+
+              {/* Times Favoritos */}
+
+              <div>
+
+                <h4 className="text-sm font-medium mb-2 text-white">Times Favoritos</h4>
+
+                {mergedData.interests?.favoriteTeams?.length > 0 ? (
+
+                  <div className="flex flex-wrap gap-2">
+
+                    {mergedData.interests.favoriteTeams.map((team: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, idx: Key | null | undefined) => (
+
+                      <Badge key={idx} variant="outline" className="bg-gray-700 text-white border-gray-600">
+
+                        {team}
+
+                      </Badge>
+
+                    ))}
+
+                  </div>
+
+                ) : (
+
+                  <p className="text-sm text-gray-400">Nenhum time cadastrado</p>
+
+                )}
+
+              </div>
+
+
+
+              {/* Jogadores Seguidos */}
+
+              <div>
+
+                <h4 className="text-sm font-medium mb-2 text-white">Jogadores Seguidos</h4>
+
+                {mergedData.interests?.followedPlayers?.length > 0 ? (
+
+                  <div className="flex flex-wrap gap-2">
+
+                    {mergedData.interests.followedPlayers.map((player: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, idx: Key | null | undefined) => (
+
+                      <Badge key={idx} variant="outline" className="bg-gray-700 text-white border-gray-600">
+
+                        {player}
+
+                      </Badge>
+
+                    ))}
+
+                  </div>
+
+                ) : (
+
+                  <p className="text-sm text-gray-400">Nenhum jogador cadastrado</p>
+
+                )}
+
+              </div>
+
+
+
+              {/* Plataformas Preferidas */}
+
+              <div>
+
+                <h4 className="text-sm font-medium mb-2 text-white">Plataformas Preferidas</h4>
+
+                {mergedData.interests?.preferredPlatforms?.length > 0 ? (
+
+                  <div className="flex flex-wrap gap-2">
+
+                    {mergedData.interests.preferredPlatforms.map((platform: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, idx: Key | null | undefined) => (
+
+                      <Badge key={idx} variant="outline" className="bg-gray-700 text-white border-gray-600">
+
+                        {platform}
+
+                      </Badge>
+
+                    ))}
+
+                  </div>
+
+                ) : (
+
+                  <p className="text-sm text-gray-400">Nenhuma plataforma cadastrada</p>
+
+                )}
+
+              </div>
+
+
+
+              {/* Conexões Sociais */}
+
+              <div>
+
+                <h4 className="text-sm font-medium mb-2 text-white">Redes Sociais Conectadas</h4>
+
+                {renderSocialConnections()}
+
+              </div>
+
+            </div>
+
+          </CardContent>
+
+        </Card>
 
 
               {/* Atividade Recente (mantido como está, mas a data pode precisar de formatação similar) */}

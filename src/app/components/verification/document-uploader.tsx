@@ -90,7 +90,7 @@ export function DocumentUploader({ verificationData, updateVerificationData }: D
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 border">
       <h3 className="text-lg font-medium">Upload de Documentos</h3>
       <p className="text-sm text-gray-400">Faça o upload dos documentos necessários para verificar sua identidade</p>
 

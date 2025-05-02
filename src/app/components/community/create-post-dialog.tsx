@@ -116,7 +116,7 @@ export default function CreatePostDialog({ open, onOpenChange }: CreatePostDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 text-white">
+      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 text-white " >
         <DialogHeader>
           <DialogTitle>Criar Publicação</DialogTitle>
           <DialogDescription className="text-gray-400">

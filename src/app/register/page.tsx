@@ -307,24 +307,25 @@ export default function Register() {
           </CardHeader>
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <div className="px-6">
-              <TabsList className="grid grid-cols-5 w-full bg-gray-900">
-                {["personal", "interests", "activities", "social", "gaming"].map((tab, idx) => {
-                  const icons = [<User key="user" />, <Gamepad2 key="gamepad" />, <Trophy key="trophy" />, <Share2 key="share" />, <Gamepad2 key="gaming" />];
-                  const labels = ["Informações Pessoais", "Interesses", "Atividades", "Redes Sociais", "Perfis de Jogo"];
-                  return (
-                    <TabsTrigger
-                      key={tab}
-                      value={tab}
-                      className="data-[state=active]:bg-[#00FF00] data-[state=active]:text-black flex items-center gap-2 py-1"
-                    >
-                      {icons[idx]}
-                      <span>{labels[idx]}</span>
-                    </TabsTrigger>
-                  );
-                })}
-              </TabsList>
-            </div>
+          <div className="px-3">
+          <TabsList className="grid grid-cols-5 w-full h-[10%] bg-gray-900">
+            {["personal", "interests", "activities", "social", "gaming"].map((tab, idx) => {
+              const icons = [<User key="user" />, <Gamepad2 key="gamepad" />, <Trophy key="trophy" />, <Share2 key="share" />, <Gamepad2 key="gaming" />];
+              const labels = ["Pessoal", "Interesses", "Atividades", "Social", "Jogos"]; // Labels mais curtos
+              
+              return (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  className="data-[state=active]:bg-[#00FF00] data-[state=active]:text-black flex flex-col items-center gap-1 py-1 text-xs"
+                >
+                  {icons[idx]}
+                  <span>{labels[idx]}</span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </div>
 
             <CardContent className="pt-6">
               {error && (

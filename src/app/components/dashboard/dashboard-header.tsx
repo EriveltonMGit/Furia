@@ -24,6 +24,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../components/ui/sheet";
+import { DocumentUploader } from "../verification/document-uploader";
+import { VerificationModal } from "./verificationModal";
 
 interface DashboardHeaderProps {
   userData: {
@@ -167,9 +169,14 @@ export function DashboardHeader({
               <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                 <Settings className="mr-2 h-4 w-4" /> Configurações
               </DropdownMenuItem>
+            
+               <div className="flex items-start justify-start border-none">
+               <VerificationModal  />
+               </div>
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" /> Sair
               </DropdownMenuItem>
+
             </DropdownMenuContent>
           </DropdownMenu>
 
