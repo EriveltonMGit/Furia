@@ -1,40 +1,47 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "../../components/ui/button"
-import { Card, CardContent } from "../../components/ui/card"
-import { FileText, Upload, X, Check, AlertCircle } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent } from "../../components/ui/card";
+import { FileText, Upload, X, Check, AlertCircle, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
+import { useAuth } from "../../contexts/AuthContext"; // Importe o hook de autenticação
 
 interface DocumentUploaderProps {
   verificationData: {
-    idDocument: File | null
-    selfie: File | null
-    addressProof: File | null
-    faceVerified: boolean
-  }
-  updateVerificationData: (data: Partial<DocumentUploaderProps["verificationData"]>) => void
+    idDocument: File | null;
+    selfie: File | null;
+    addressProof: File | null;
+    faceVerified: boolean;
+  };
+  updateVerificationData: (data: Partial<DocumentUploaderProps["verificationData"]>) => void;
+  onVerifyDocuments?: (idDocument: File, selfie: File) => Promise<{ success: boolean; faceVerified: boolean }>;
 }
 
-export function DocumentUploader({ verificationData, updateVerificationData }: DocumentUploaderProps) {
-  const [idPreview, setIdPreview] = useState<string | null>(null)
-  const [addressPreview, setAddressPreview] = useState<string | null>(null)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+export function DocumentUploader({
+  verificationData,
+  updateVerificationData,
+  onVerifyDocuments
+}: DocumentUploaderProps) {
+  const [idPreview, setIdPreview] = useState<string | null>(null);
+  const [addressPreview, setAddressPreview] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isVerifying, setIsVerifying] = useState(false);
+  const { user } = useAuth(); // Obtenha o objeto de usuário
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "idDocument" | "addressProof") => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     // Validate file type
-    const validTypes = ["image/jpeg", "image/png", "application/pdf"]
+    const validTypes = ["image/jpeg", "image/png", "application/pdf"];
     if (!validTypes.includes(file.type)) {
       setErrors({
         ...errors,
         [type]: "Formato inválido. Use JPG, PNG ou PDF.",
-      })
-      return
+      });
+      return;
     }
 
     // Validate file size (max 5MB)
@@ -42,52 +49,101 @@ export function DocumentUploader({ verificationData, updateVerificationData }: D
       setErrors({
         ...errors,
         [type]: "Arquivo muito grande. Máximo 5MB.",
-      })
-      return
+      });
+      return;
     }
 
     // Clear errors
     setErrors({
       ...errors,
       [type]: "",
-    })
+    });
 
     // Update state
-    updateVerificationData({ [type]: file })
+    updateVerificationData({ [type]: file });
 
     // Create preview for images
     if (file.type.startsWith("image/")) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
         if (type === "idDocument") {
-          setIdPreview(e.target?.result as string)
+          setIdPreview(e.target?.result as string);
         } else {
-          setAddressPreview(e.target?.result as string)
+          setAddressPreview(e.target?.result as string);
         }
-      }
-      reader.readAsDataURL(file)
+      };
+      reader.readAsDataURL(file);
     } else {
       // For PDFs, just show an icon
       if (type === "idDocument") {
-        setIdPreview("pdf")
+        setIdPreview("pdf");
       } else {
-        setAddressPreview("pdf")
+        setAddressPreview("pdf");
       }
     }
-  }
+  };
 
   const removeFile = (type: "idDocument" | "addressProof") => {
-    updateVerificationData({ [type]: null })
+    updateVerificationData({ [type]: null });
     if (type === "idDocument") {
-      setIdPreview(null)
+      setIdPreview(null);
     } else {
-      setAddressPreview(null)
+      setAddressPreview(null);
     }
     setErrors({
       ...errors,
       [type]: "",
-    })
-  }
+    });
+  };
+
+  const handleVerifyDocuments = async () => {
+    if (!verificationData.idDocument || !verificationData.selfie) {
+      setErrors({
+        ...errors,
+        verification: "Por favor, envie o documento de identidade e a selfie."
+      });
+      return;
+    }
+
+    setIsVerifying(true);
+    setErrors({
+      ...errors,
+      verification: ""
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("idDocument", verificationData.idDocument);
+      formData.append("selfie", verificationData.selfie);
+
+      const token = user?.token; // Obtém o token do contexto de autenticação
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/verification/verify-identity`, {
+        method: "POST",
+        body: formData,
+        credentials: "include", // Isso envia os cookies automaticamente
+        headers: {
+          'Authorization': `Bearer ${token}`, // Inclui o token no header
+          // Se você não estivesse usando cookies, esta seria a forma de enviar o token
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const data = await response.json();
+      updateVerificationData({ faceVerified: data.faceVerified });
+    } catch (error) {
+      setErrors({
+        ...errors,
+        verification: (error as Error).message || "Erro ao verificar documentos. Tente novamente."
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   return (
     <div className="space-y-6 border">
@@ -216,6 +272,46 @@ export function DocumentUploader({ verificationData, updateVerificationData }: D
         </div>
       </div>
 
+      {verificationData.idDocument && verificationData.selfie && (
+        <div className="flex justify-end">
+          <Button
+            onClick={handleVerifyDocuments}
+            disabled={isVerifying || verificationData.faceVerified}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            {isVerifying ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Verificando...
+              </>
+            ) : verificationData.faceVerified ? (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Verificação concluída
+              </>
+            ) : (
+              "Verificar Documentos"
+            )}
+          </Button>
+        </div>
+      )}
+
+      {errors.verification && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro na verificação</AlertTitle>
+          <AlertDescription>{errors.verification}</AlertDescription>
+        </Alert>
+      )}
+
+      {verificationData.faceVerified && (
+        <Alert className="bg-green-900/30 border-green-800">
+          <Check className="h-4 w-4" />
+          <AlertTitle>Verificação concluída</AlertTitle>
+          <AlertDescription>Os documentos foram verificados com sucesso!</AlertDescription>
+        </Alert>
+      )}
+
       <Alert className="bg-gray-700 border-gray-600">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Importante</AlertTitle>
@@ -225,5 +321,5 @@ export function DocumentUploader({ verificationData, updateVerificationData }: D
         </AlertDescription>
       </Alert>
     </div>
-  )
+  );
 }
