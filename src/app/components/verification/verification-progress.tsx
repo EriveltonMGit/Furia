@@ -1,28 +1,49 @@
-export function VerificationProgress({
-  currentStep,
-  totalSteps,
-}: {
-  currentStep: number
-  totalSteps: number
-}) {
-  return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium">Progresso</span>
-        <span className="text-sm font-medium">
-          {currentStep}/{totalSteps}
-        </span>
-      </div>
-      <div className="w-full bg-gray-700 rounded-full h-2.5">
-        <div
-          className="bg-[#00FF00] h-2.5 rounded-full"
-          style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-        ></div>
-      </div>
-      <div className="flex justify-between mt-2">
-        <span className="text-xs text-gray-400">Upload de Documentos</span>
-        <span className="text-xs text-gray-400">Verificação Facial</span>
-      </div>
-    </div>
-  )
+// frontend/components/verification/verification-progress.tsx
+import { CheckCircle, Loader2 } from "lucide-react";
+
+interface VerificationProgressProps {
+    currentStep: number;
+    totalSteps: number;
+}
+
+export function VerificationProgress({ currentStep, totalSteps }: VerificationProgressProps) {
+    const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
+
+    return (
+        <div className="flex items-center justify-between w-full">
+            {steps.map((step) => (
+                <div key={step} className="relative flex flex-col items-center text-center">
+                    <div
+                        className={`
+                            rounded-full border-2 h-8 w-8 flex items-center justify-center
+                            ${step < currentStep ? 'bg-green-500 border-green-500 text-white' :
+                            step === currentStep ? 'border-blue-500 text-blue-500' :
+                            'border-gray-500 text-gray-500'}
+                        `}
+                    >
+                        {step < currentStep ? <CheckCircle className="h-5 w-5" /> : step === currentStep ? <Loader2 className="h-5 w-5 animate-spin" /> : step}
+                    </div>
+                    {step > 1 && (
+                        <div
+                            className={`
+                                absolute top-4 -left-1/2 w-1/2 h-0.5 bg-gray-500
+                                ${step <= currentStep ? 'bg-green-500' : ''}
+                            `}
+                        />
+                    )}
+                    {step < totalSteps && (
+                        <div
+                            className={`
+                                absolute top-4 left-1/2 w-1/2 h-0.5 bg-gray-500
+                                ${step < currentStep ? 'bg-green-500' : ''}
+                            `}
+                        />
+                    )}
+                    <span className="mt-2 text-sm text-gray-400">
+                        {step === 1 ? 'Documentos' : 'Facial'}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
 }
