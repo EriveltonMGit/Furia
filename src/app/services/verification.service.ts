@@ -1,20 +1,14 @@
 import { API_URL } from "../services/auth.service";
-import { useAuth } from "../contexts/AuthContext";
 
 interface VerificationResponse {
   success: boolean;
   faceVerified: boolean;
+  confidence?: number;
+  reasons?: string[];
   message?: string;
 }
 
-export const verifyIdentity = async (idDocument: File, selfie: File): Promise<VerificationResponse> => {
-  const { user } = useAuth();
-  const token = user?.token;
-
-  if (!token) {
-    throw new Error("Usuário não autenticado");
-  }
-
+export const verifyIdentity = async (idDocument: File, selfie: File, token: string): Promise<VerificationResponse> => {
   const formData = new FormData();
   formData.append("idDocument", idDocument);
   formData.append("selfie", selfie);
@@ -40,16 +34,16 @@ export const verifyIdentity = async (idDocument: File, selfie: File): Promise<Ve
   }
 };
 
-// Serviço para verificação local (opcional - apenas para teste básico)
+// Versão para desenvolvimento local (opcional)
 export const localFaceVerification = async (idDocument: File, selfie: File): Promise<VerificationResponse> => {
   return new Promise((resolve) => {
-    // Simulação de verificação local (apenas para desenvolvimento)
     setTimeout(() => {
-      // Esta é uma simulação - em produção sempre use o backend
       resolve({
         success: true,
-        faceVerified: Math.random() > 0.5, // 50% de chance de ser verdadeiro
-        message: "Verificação local simulada"
+        faceVerified: Math.random() > 0.5,
+        confidence: Math.random(),
+        reasons: ["Verificação local simulada"],
+        message: "Esta é uma simulação de verificação para desenvolvimento"
       });
     }, 1500);
   });
