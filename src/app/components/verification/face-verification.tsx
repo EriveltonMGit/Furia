@@ -1,143 +1,123 @@
-// frontend/components/verification/face-verification.tsx
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Card, CardContent } from "../../components/ui/card";
 import { Camera, Check, RefreshCw, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
-import { API_URL } from "../../services/auth.service";
-import { useAuth } from "../../contexts/AuthContext"; // Importe o hook de autenticação
+import { verifyIdentity } from "../../services/verification.service";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface FaceVerificationProps {
-    verificationData: {
-        idDocument: File | null;
-        selfie: File | null;
-        addressProof: File | null;
-        faceVerified: boolean;
-    };
-    updateVerificationData: (data: Partial<FaceVerificationProps["verificationData"]>) => void;
+  verificationData: {
+    idDocument: File | null;
+    selfie: File | null;
+    addressProof: File | null;
+    faceVerified: boolean;
+  };
+  updateVerificationData: (data: Partial<FaceVerificationProps["verificationData"]>) => void;
 }
 
 export function FaceVerification({ verificationData, updateVerificationData }: FaceVerificationProps) {
-    const [stream, setStream] = useState<MediaStream | null>(null);
-    const [capturedImage, setCapturedImage] = useState<string | null>(null);
-    const [isVerifying, setIsVerifying] = useState(false);
-    const [verificationError, setVerificationError] = useState<string | null>(null);
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { user } = useAuth(); // Obtenha o objeto de usuário (que pode conter o token)
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { user } = useAuth();
 
-    useEffect(() => {
-        return () => {
-            // Clean up stream when component unmounts
-            if (stream) {
-                stream.getTracks().forEach((track) => track.stop());
-            }
-        };
-    }, [stream]);
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [stream]);
 
-    const startCamera = useCallback(async () => {
-        try {
-            const mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    facingMode: "user",
-                },
-            });
-            setStream(mediaStream);
+  const startCamera = useCallback(async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user",
+        },
+      });
+      setStream(mediaStream);
 
-            if (videoRef.current) {
-                videoRef.current.srcObject = mediaStream;
-            }
-        } catch (err) {
-            console.error("Error accessing camera:", err);
-            setVerificationError("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
-        }
-    }, []);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      setVerificationError("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
+    }
+  }, []);
 
-    const stopCamera = useCallback(() => {
-        if (stream) {
-            stream.getTracks().forEach((track) => track.stop());
-            setStream(null);
-        }
-    }, [stream]);
+  const stopCamera = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
+  }, [stream]);
 
-    const captureImage = useCallback(() => {
-        if (videoRef.current && canvasRef.current) {
-            const video = videoRef.current;
-            const canvas = canvasRef.current;
-            const context = canvas.getContext("2d");
+  const captureImage = useCallback(() => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
 
-            if (context) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      if (context) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                const imageDataUrl = canvas.toDataURL("image/png");
-                setCapturedImage(imageDataUrl);
+        const imageDataUrl = canvas.toDataURL("image/png");
+        setCapturedImage(imageDataUrl);
 
-                // Convert data URL to File object
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const file = new File([blob], "selfie.png", { type: "image/png" });
-                        updateVerificationData({ selfie: file });
-                    }
-                }, "image/png");
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], "selfie.png", { type: "image/png" });
+            updateVerificationData({ selfie: file });
+          }
+        }, "image/png");
 
-                stopCamera();
-            }
-        }
-    }, [stopCamera, updateVerificationData]);
+        stopCamera();
+      }
+    }
+  }, [stopCamera, updateVerificationData]);
 
-    const resetCapture = useCallback(() => {
-        setCapturedImage(null);
-        updateVerificationData({ selfie: null });
-        startCamera();
-    }, [startCamera, updateVerificationData]);
+  const resetCapture = useCallback(() => {
+    setCapturedImage(null);
+    updateVerificationData({ selfie: null });
+    startCamera();
+  }, [startCamera, updateVerificationData]);
 
-    const verifyFace = useCallback(async () => {
-        setIsVerifying(true);
-        setVerificationError(null);
+  const verifyFace = useCallback(async () => {
+    setIsVerifying(true);
+    setVerificationError(null);
 
-        if (!verificationData.idDocument || !verificationData.selfie) {
-            setVerificationError("Por favor, envie o documento de identidade e capture a selfie.");
-            setIsVerifying(false);
-            return;
-        }
+    if (!verificationData.idDocument || !verificationData.selfie) {
+      setVerificationError("Por favor, envie o documento de identidade e capture a selfie.");
+      setIsVerifying(false);
+      return;
+    }
 
-        const formData = new FormData();
-        formData.append("idDocument", verificationData.idDocument);
-        formData.append("selfie", verificationData.selfie);
-
-        const token = user?.token; // Assumindo que o token está na propriedade 'token' do seu objeto de usuário
-
-        try {
-            const response = await fetch(
-                `${API_URL}/api/verification/verify-identity`,
-                {
-                    method: "POST",
-                    body: formData,
-                    headers: {
-                        'Authorization': `Bearer ${token}`, // Inclua o token no header
-                    },
-                }
-            );
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                updateVerificationData({ faceVerified: data.faceVerified }); // Use data.faceVerified
-            } else {
-                setVerificationError(data.message || "Erro ao verificar a identidade.");
-            }
-        } catch (error) {
-            console.error("Erro ao enviar para verificação:", error);
-            setVerificationError("Não foi possível conectar ao servidor de verificação.");
-        } finally {
-            setIsVerifying(false);
-        }
-    }, [verificationData, updateVerificationData, API_URL, user]); // Adicione 'user' como dependência
+    try {
+      const result = await verifyIdentity(verificationData.idDocument, verificationData.selfie);
+      
+      if (result.success) {
+        updateVerificationData({ faceVerified: result.faceVerified });
+      } else {
+        setVerificationError(result.message || "Erro ao verificar a identidade.");
+      }
+    } catch (error) {
+      console.error("Erro na verificação:", error);
+      setVerificationError(error instanceof Error ? error.message : "Erro desconhecido");
+    } finally {
+      setIsVerifying(false);
+    }
+  }, [verificationData, updateVerificationData]);
 
     return (
         <div className="space-y-6 ">

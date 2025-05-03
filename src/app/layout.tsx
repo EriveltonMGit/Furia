@@ -7,7 +7,8 @@ import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from "react-hot-toast"
 import { ChatProvider } from "./components/chatFloat/chat-provider"
 import FloatingChatButton from "./components/chatFloat/floating-chat-button"
-import FloatingWhatsappButton from "./components/whatsappFloat/floating-whatsapp-button"
+import { VerificationProvider } from "./contexts/VerificationContext"
+
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -22,13 +23,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className} suppressHydrationWarning={true}>
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <VerificationProvider>
             <ChatProvider>
+           
+
               <Toaster position="top-right" />
+              
               {children}
              
               <FloatingChatButton />
             </ChatProvider>
-            
+            </VerificationProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>

@@ -1,11 +1,11 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent } from "../../components/ui/card"
 import { FileText, Upload, X, Check, AlertCircle, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
+import { verifyIdentity } from "../../services/verification.service"
 
 interface DocumentUploaderProps {
   verificationData: {
@@ -15,13 +15,11 @@ interface DocumentUploaderProps {
     faceVerified: boolean
   }
   updateVerificationData: (data: Partial<DocumentUploaderProps["verificationData"]>) => void
-  onVerifyDocuments?: (idDocument: File, selfie: File) => Promise<{ success: boolean; faceVerified: boolean }>
 }
 
-export function DocumentUploader({ 
-  verificationData, 
+export function DocumentUploader({
+  verificationData,
   updateVerificationData,
-  onVerifyDocuments
 }: DocumentUploaderProps) {
   const [idPreview, setIdPreview] = useState<string | null>(null)
   const [addressPreview, setAddressPreview] = useState<string | null>(null)
@@ -110,18 +108,23 @@ export function DocumentUploader({
     })
 
     try {
-      if (onVerifyDocuments) {
-        const result = await onVerifyDocuments(
-          verificationData.idDocument,
-          verificationData.selfie
-        )
-        
-        updateVerificationData({ faceVerified: result.faceVerified })
+      const result = await verifyIdentity(
+        verificationData.idDocument,
+        verificationData.selfie
+      )
+      
+      updateVerificationData({ faceVerified: result.faceVerified })
+
+      if (!result.faceVerified) {
+        setErrors({
+          ...errors,
+          verification: "A foto não corresponde ao documento enviado. Por favor, tente novamente."
+        })
       }
     } catch (error) {
       setErrors({
         ...errors,
-        verification: "Erro ao verificar documentos. Tente novamente."
+        verification: error instanceof Error ? error.message : "Erro ao verificar documentos."
       })
     } finally {
       setIsVerifying(false)
