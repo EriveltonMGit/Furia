@@ -6,6 +6,7 @@ import { Card, CardContent } from "../../components/ui/card"
 import { FileText, Upload, X, Check, AlertCircle, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
 import { verifyIdentity } from "../../services/verification.service"
+import { useAuth } from "../../contexts/AuthContext"
 
 interface DocumentUploaderProps {
   verificationData: {
@@ -21,6 +22,7 @@ export function DocumentUploader({
   verificationData,
   updateVerificationData,
 }: DocumentUploaderProps) {
+  const { user } = useAuth();
   const [idPreview, setIdPreview] = useState<string | null>(null)
   const [addressPreview, setAddressPreview] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -101,6 +103,14 @@ export function DocumentUploader({
       return
     }
 
+    if (!user?.token) {
+      setErrors({
+        ...errors,
+        verification: "Usuário não autenticado."
+      })
+      return
+    }
+
     setIsVerifying(true)
     setErrors({
       ...errors,
@@ -110,7 +120,8 @@ export function DocumentUploader({
     try {
       const result = await verifyIdentity(
         verificationData.idDocument,
-        verificationData.selfie
+        verificationData.selfie,
+        user.token
       )
       
       updateVerificationData({ faceVerified: result.faceVerified })
@@ -118,7 +129,7 @@ export function DocumentUploader({
       if (!result.faceVerified) {
         setErrors({
           ...errors,
-          verification: "A foto não corresponde ao documento enviado. Por favor, tente novamente."
+          verification: result.message || "A foto não corresponde ao documento enviado. Por favor, tente novamente."
         })
       }
     } catch (error) {

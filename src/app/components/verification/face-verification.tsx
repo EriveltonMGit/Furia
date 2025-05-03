@@ -17,6 +17,7 @@ interface FaceVerificationProps {
   updateVerificationData: (data: Partial<FaceVerificationProps["verificationData"]>) => void;
 }
 
+
 export function FaceVerification({ verificationData, updateVerificationData }: FaceVerificationProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -103,11 +104,24 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
       return;
     }
 
+    if (!user?.token) {
+      setVerificationError("Usuário não autenticado.");
+      setIsVerifying(false);
+      return;
+    }
+
     try {
-      const result = await verifyIdentity(verificationData.idDocument, verificationData.selfie);
+      const result = await verifyIdentity(
+        verificationData.idDocument,
+        verificationData.selfie,
+        user.token
+      );
       
       if (result.success) {
         updateVerificationData({ faceVerified: result.faceVerified });
+        if (!result.faceVerified) {
+          setVerificationError(result.message || "A foto não corresponde ao documento enviado.");
+        }
       } else {
         setVerificationError(result.message || "Erro ao verificar a identidade.");
       }
@@ -117,7 +131,7 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
     } finally {
       setIsVerifying(false);
     }
-  }, [verificationData, updateVerificationData]);
+  }, [verificationData, updateVerificationData, user?.token]);
 
     return (
         <div className="space-y-6 ">
