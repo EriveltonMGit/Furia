@@ -8,6 +8,7 @@ interface UserProfileData {
     created_at: string;
     faceVerified?: boolean;
     verificationDate?: string;
+    verificationConfidence?: number;
     };
     profile?: {
       id?: number;
