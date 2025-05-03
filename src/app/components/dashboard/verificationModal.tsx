@@ -1,4 +1,3 @@
-// C:\Users\julia\OneDrive\Área de Trabalho\FRONT-FURIA\furia\src\app\components\dashboard\verificationModal.tsx
 "use client";
 
 import { useState } from "react";
@@ -20,6 +19,7 @@ import { DocumentUploader } from "../verification/document-uploader";
 import { FaceVerification } from "../verification/face-verification";
 import { VerificationProgress } from "../verification/verification-progress";
 import { Check } from "lucide-react";
+import { toast } from "react-hot-toast"; // Import toast
 
 export function VerificationModal() {
     const [open, setOpen] = useState(false);
@@ -30,10 +30,10 @@ export function VerificationModal() {
         addressProof: null,
         faceVerified: false,
     });
-    
+
     const apiUrl = process.env.NODE_ENV === 'production'
-    ? process.env.NEXT_PUBLIC_API_URL
-    : 'http://localhost:5000';
+        ? process.env.NEXT_PUBLIC_API_URL
+        : 'http://localhost:5000';
 
     const updateVerificationData = (data: any) => {
         setVerificationData((prev) => ({ ...prev, ...data }));
@@ -66,24 +66,26 @@ export function VerificationModal() {
         // Adicione outros campos ao formData conforme necessário
 
         try {
-          const response = await fetch(`${apiUrl}/api/verification/verify-identity`, {
-            method: 'POST',
-            body: formData,
-        });
+            const response = await fetch(`${apiUrl}/api/verification/verify-identity`, {
+                method: 'POST',
+                body: formData,
+            });
 
             if (response.ok) {
                 console.log('Verificação enviada com sucesso!');
+                toast.success('Verificação salva com sucesso!'); // Use toast.success
                 setOpen(false);
                 // Adicione aqui qualquer outra ação que precise acontecer após o sucesso
             } else {
                 console.error('Erro ao enviar verificação:', response.status);
-                // Exiba uma mensagem de erro para o usuário se necessário
                 const errorData = await response.json();
                 console.error('Detalhes do erro:', errorData);
+                toast.error('Erro ao salvar a verificação. Por favor, tente novamente.'); // Use toast.error
                 // Trate os detalhes do erro conforme necessário
             }
         } catch (error) {
             console.error('Erro na requisição:', error);
+            toast.error('Ocorreu um erro ao conectar com o servidor.'); // Use toast.error
             // Exiba uma mensagem de erro para o usuário
         }
     };
