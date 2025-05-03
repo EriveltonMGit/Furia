@@ -8,31 +8,44 @@ interface VerificationResponse {
   message?: string;
 }
 
-export const verifyIdentity = async (idDocument: File, selfie: File, token: string): Promise<VerificationResponse> => {
-  const formData = new FormData();
-  formData.append("idDocument", idDocument);
-  formData.append("selfie", selfie);
-
-  try {
-    const response = await fetch(`${API_URL}/api/verification/verify-identity`, {
-      method: "POST",
-      body: formData,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Erro ao verificar identidade");
+export const verifyIdentity = async (
+    
+    idDocument: File, 
+    selfie: File, 
+    token: string
+  ): Promise<VerificationResponse> => {
+    const formData = new FormData();
+    formData.append("idDocument", idDocument);
+    formData.append("selfie", selfie);
+  
+    try {
+        const response = await fetch(`${API_URL}/api/verification/verify-identity`, {
+          method: "POST",
+          body: formData,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+            'X-Access-Token': token, 
+          },
+          credentials: 'include',
+        });
+  
+      if (response.status === 401) {
+        // Token expirado ou inválido
+        throw new Error("Sessão expirada. Por favor, faça login novamente.");
+      }
+  
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Erro ao verificar identidade");
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error("Erro na verificação:", error);
+      throw error; // Propaga o erro original
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Erro na verificação:", error);
-    throw new Error("Não foi possível conectar ao servidor de verificação");
-  }
-};
+  };
 
 // Versão para desenvolvimento local (opcional)
 export const localFaceVerification = async (idDocument: File, selfie: File): Promise<VerificationResponse> => {
