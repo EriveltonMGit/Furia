@@ -1,4 +1,3 @@
-// src/app/components/verification/document-uploader.tsx
 "use client";
 
 import type React from "react";
@@ -8,7 +7,7 @@ import { Card, CardContent } from "../../components/ui/card";
 import { FileText, Upload, X, Check, AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
 import { Progress } from "../../components/ui/progress";
-import { updateVerificationStatus } from "../../services/verification.service"; // ✅ Importe a função updateVerificationStatus
+import { FaceVerificationService } from "../../services/verification.service";
 
 interface DocumentUploaderProps {
     verificationData: {
@@ -18,17 +17,15 @@ interface DocumentUploaderProps {
         faceVerified: boolean;
     };
     updateVerificationData: (data: Partial<DocumentUploaderProps["verificationData"]>) => void;
-    onVerifyDocuments?: (idDocument: File, selfie: File, userId: string) => Promise<any>;
-    user?: { uid: string } | null;
-    onVerificationComplete?: (success: boolean, confidence?: number) => void; // 🚀 Adicionando callback para o pai
+    userId: string | undefined; // Permita que userId seja undefined inicialmente
+    onVerificationComplete: (success: boolean, confidence?: number) => void; // Adicione a prop onVerificationComplete
 }
 
 export function DocumentUploader({
     verificationData,
     updateVerificationData,
-    onVerifyDocuments,
-    user,
-    onVerificationComplete, // 🚀 Recebendo o callback
+    userId,
+    onVerificationComplete, // Receba a prop onVerificationComplete
 }: DocumentUploaderProps) {
     const [idPreview, setIdPreview] = useState<string | null>(null);
     const [addressPreview, setAddressPreview] = useState<string | null>(null);
@@ -99,57 +96,66 @@ export function DocumentUploader({
 
     const handleVerifyDocuments = async () => {
         if (!verificationData.idDocument || !verificationData.selfie) {
-            setErrors({ ...errors, verification: "Por favor, envie o documento de identidade e a selfie." });
+            setErrors({
+                ...errors,
+                verification: "Por favor, envie o documento de identidade e a selfie.",
+            });
             return;
         }
 
-        if (!user?.uid) {
-            setErrors({ ...errors, verification: "Usuário não identificado." });
+        if (!userId) {
+            setErrors({
+                ...errors,
+                verification: "Usuário não autenticado. Faça login novamente.",
+            });
             return;
         }
 
         setIsVerifying(true);
         setVerificationProgress(10);
-        setErrors({ ...errors, verification: "" });
+        setErrors({
+            ...errors,
+            verification: "",
+        });
 
         try {
             setVerificationProgress(50);
 
-            const verificationResult = await onVerifyDocuments?.(
+            const result = await FaceVerificationService.verifyFaceMatch(
                 verificationData.idDocument,
                 verificationData.selfie,
-                user.uid
+                userId
             );
 
-            setVerificationProgress(70);
+            setVerificationProgress(90);
+            updateVerificationData({ faceVerified: result.faceVerified });
 
-            console.log("Resultado da verificação no DocumentUploader:", verificationResult); // 🔍 Log do resultado
-
-            if (verificationResult?.faceVerified) {
-                setConfidenceScore(verificationResult.confidence);
-                updateVerificationData({ faceVerified: true }); // Atualiza o estado local
-                console.log("Chamando updateVerificationStatus no DocumentUploader com UID:", user.uid, "e resultado:", verificationResult); // 🔍 Log antes de atualizar o status
-                await updateVerificationStatus(user.uid, {
-                    status: "verified",
-                    faceVerified: true,
-                    confidence: verificationResult.confidence
-                });
-                onVerificationComplete?.(true, verificationResult.confidence); // 🚀 Chama o callback em caso de sucesso
-            } else if (verificationResult?.error) {
-                setErrors({ ...errors, verification: `Erro na verificação: ${verificationResult.error}` });
-                onVerificationComplete?.(false); // 🚀 Chama o callback em caso de falha
-            } else {
-                setErrors({ ...errors, verification: "Falha na verificação facial." });
-                onVerificationComplete?.(false); // 🚀 Chama o callback em caso de falha
+            if (result.confidence) {
+                setConfidenceScore(result.confidence);
             }
 
-        } catch (error: any) {
-            console.error("Erro durante a verificação no DocumentUploader:", error);
-            setErrors({ ...errors, verification: "Ocorreu um erro inesperado durante a verificação." });
-            onVerificationComplete?.(false); // 🚀 Chama o callback em caso de erro
+            // Chame a função de callback para informar o componente pai sobre o resultado
+            onVerificationComplete(result.faceVerified, result.confidence);
+
+            if (!result.faceVerified) {
+                setErrors({
+                    ...errors,
+                    verification: result.message || "A foto não corresponde ao documento enviado. Por favor, tente novamente.",
+                });
+            }
+        } catch (error) {
+            setErrors({
+                ...errors,
+                verification: error instanceof Error ? error.message : "Erro ao verificar documentos.",
+            });
+            // Informe o componente pai sobre a falha
+            onVerificationComplete(false);
         } finally {
+            setVerificationProgress(100);
             setIsVerifying(false);
-            setVerificationProgress(0);
+            setTimeout(() => {
+                setVerificationProgress(0);
+            }, 1000);
         }
     };
 
@@ -162,6 +168,7 @@ export function DocumentUploader({
                 <div className="space-y-4">
                     <h4 className="font-medium">Documento de Identidade</h4>
                     <p className="text-sm text-gray-400">RG, CNH ou Passaporte (frente e verso em uma única imagem)</p>
+
                     {!verificationData.idDocument ? (
                         <Card className="border-dashed border-2 border-gray-600 bg-gray-800/50">
                             <CardContent className="flex flex-col items-center justify-center py-6">
@@ -207,6 +214,7 @@ export function DocumentUploader({
                             </CardContent>
                         </Card>
                     )}
+
                     {errors.idDocument && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
@@ -221,6 +229,7 @@ export function DocumentUploader({
                     <p className="text-sm text-gray-400">
                         Conta de luz, água, telefone ou internet (emitido nos últimos 3 meses)
                     </p>
+
                     {!verificationData.addressProof ? (
                         <Card className="border-dashed border-2 border-gray-600 bg-gray-800/50">
                             <CardContent className="flex flex-col items-center justify-center py-6">
@@ -266,6 +275,7 @@ export function DocumentUploader({
                             </CardContent>
                         </Card>
                     )}
+
                     {errors.addressProof && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
@@ -291,7 +301,7 @@ export function DocumentUploader({
                     <div className="flex justify-end">
                         <Button
                             onClick={handleVerifyDocuments}
-                            disabled={isVerifying || verificationData.faceVerified || !user?.uid}
+                            disabled={isVerifying || verificationData.faceVerified || !userId}
                             className="bg-green-600 hover:bg-green-700"
                         >
                             {isVerifying ? (
