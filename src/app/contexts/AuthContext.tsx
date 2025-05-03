@@ -1,131 +1,190 @@
-// src/app/contexts/AuthContext.tsx
-"use client";
+"use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import {
   login as authLogin,
   logout as authLogout,
   getCurrentUser,
-  isAuthenticated as checkAuthStatus,
   register as authRegister,
-  LoginData,
-  AuthResponse
-} from '../services/auth.service';
-import { signInWithGoogle as firebaseGoogleLogin } from '../types/firebase';
+  type AuthResponse,
+} from "../services/auth.service"
+import { signInWithGoogle as firebaseGoogleLogin } from "../types/firebase"
 
 interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
+  name: string
+  email: string
+  password: string
+}
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role?: string
+  created_at?: string | Date
+  token?: string // Adicionamos o token aqui
 }
 
 interface AuthContextType {
-  user: any;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<AuthResponse>;
-  register: (data: RegisterData) => Promise<AuthResponse>;
-  googleLogin: () => Promise<AuthResponse>;
-  logout: () => Promise<void>;
-  checkAuth: () => Promise<boolean>;
-  isAuthenticated: boolean;
+  user: User | null
+  loading: boolean
+  login: (email: string, password: string) => Promise<AuthResponse>
+  register: (data: RegisterData) => Promise<AuthResponse>
+  googleLogin: () => Promise<AuthResponse>
+  logout: () => Promise<void>
+  checkAuth: () => Promise<boolean>
+  isAuthenticated: boolean
+  getToken: () => string | undefined // Alterado para string | undefined
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Função para extrair o token JWT do cookie
+  const getTokenFromCookie = (): string | undefined => {
+    if (typeof document === "undefined") return undefined // Verificação para SSR
+
+    const cookies = document.cookie.split(";")
+    const jwtCookie = cookies.find((cookie) => cookie.trim().startsWith("jwt="))
+
+    if (!jwtCookie) return undefined
+
+    return jwtCookie.split("=")[1]
+  }
+
+  // Função pública para obter o token
+  const getToken = (): string | undefined => {
+    return user?.token || getTokenFromCookie()
+  }
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const userData = await getCurrentUser();
-      if (userData) {
-        setUser(userData);
-        setIsAuthenticated(true);
+      try {
+        const userData = await getCurrentUser()
+        if (userData) {
+          // Obter o token do cookie
+          const token = getTokenFromCookie()
+
+          setUser({
+            ...userData,
+            token,
+          })
+          setIsAuthenticated(true)
+        }
+      } catch (error) {
+        console.error("Erro ao inicializar autenticação:", error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false);
-    };
-    initializeAuth();
-  }, []);
+    }
+
+    initializeAuth()
+  }, [])
 
   const login = async (email: string, password: string): Promise<AuthResponse> => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const result = await authLogin({ email, password });
+      const result = await authLogin({ email, password })
       if (result.success && result.user) {
-        setUser(result.user);
-        setIsAuthenticated(true);
+        // Obter o token do cookie após o login
+        const token = getTokenFromCookie()
+
+        setUser({
+          ...result.user,
+          token,
+        })
+        setIsAuthenticated(true)
       }
-      return result;
+      return result
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const register = async (data: RegisterData): Promise<AuthResponse> => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const result = await authRegister(data);
+      const result = await authRegister(data)
       if (result.success && result.user) {
-        setUser(result.user);
-        setIsAuthenticated(true);
-      }
-      return result;
-    } finally {
-      setLoading(false);
-    }
-  };
+        // Obter o token do cookie após o registro
+        const token = getTokenFromCookie()
 
-  // Adicione esta função no AuthContext
-const googleLogin = async (): Promise<AuthResponse> => {
-  setLoading(true);
-  try {
-    const result = await firebaseGoogleLogin();
-    if (result.success && result.user) {
-      setUser(result.user);
-      setIsAuthenticated(true);
+        setUser({
+          ...result.user,
+          token,
+        })
+        setIsAuthenticated(true)
+      }
+      return result
+    } finally {
+      setLoading(false)
     }
-    return result;
-  } catch (error: any) {
-    return {
-      success: false,
-      message: error.message || 'Erro ao fazer login com Google'
-    };
-  } finally {
-    setLoading(false);
   }
-};
+
+  const googleLogin = async (): Promise<AuthResponse> => {
+    setLoading(true)
+    try {
+      const result = await firebaseGoogleLogin()
+      if (result.success && result.user) {
+        // Obter o token do cookie após o login com Google
+        const token = getTokenFromCookie()
+
+        setUser({
+          ...result.user,
+          token,
+        })
+        setIsAuthenticated(true)
+      }
+      return result
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || "Erro ao fazer login com Google",
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const logout = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      await authLogout();
-      setUser(null);
-      setIsAuthenticated(false);
+      await authLogout()
+      setUser(null)
+      setIsAuthenticated(false)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const checkAuth = async () => {
     try {
-      const userData = await getCurrentUser();
+      const userData = await getCurrentUser()
       if (userData) {
-        setUser(userData);
-        setIsAuthenticated(true);
-        return true;
+        // Obter o token do cookie
+        const token = getTokenFromCookie()
+
+        setUser({
+          ...userData,
+          token,
+        })
+        setIsAuthenticated(true)
+        return true
       } else {
-        setUser(null);
-        setIsAuthenticated(false);
-        return false;
+        setUser(null)
+        setIsAuthenticated(false)
+        return false
       }
     } catch {
-      setUser(null);
-      setIsAuthenticated(false);
-      return false;
+      setUser(null)
+      setIsAuthenticated(false)
+      return false
     }
-  };
+  }
 
   return (
     <AuthContext.Provider
@@ -137,18 +196,19 @@ const googleLogin = async (): Promise<AuthResponse> => {
         googleLogin,
         logout,
         checkAuth,
-        isAuthenticated
+        isAuthenticated,
+        getToken,
       }}
     >
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider")
   }
-  return context;
+  return context
 }
