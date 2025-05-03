@@ -97,6 +97,7 @@ export function FaceVerificationEnhanced({ verificationData, updateVerificationD
     setCapturedImage(null)
     updateVerificationData({ selfie: null })
     setConfidenceScore(null)
+    setVerificationError(null)
     startCamera()
   }, [startCamera, updateVerificationData])
 
@@ -115,73 +116,30 @@ export function FaceVerificationEnhanced({ verificationData, updateVerificationD
     try {
       setVerificationProgress(30)
 
-      // Try backend verification first
-      const token = getToken?.() || user?.token
+      // Obter token se disponível (não é mais obrigatório)
+      const token = getToken?.()
 
-      if (token) {
-        setVerificationProgress(50)
-        const result = await FaceVerificationService.verifyFaceMatch(
-          verificationData.idDocument,
-          verificationData.selfie,
-          token,
-        )
+      // Verificação pode funcionar com ou sem token
+      setVerificationProgress(50)
+      const result = await FaceVerificationService.verifyFaceMatch(
+        verificationData.idDocument,
+        verificationData.selfie,
+        token,
+      )
 
-        setVerificationProgress(90)
+      setVerificationProgress(90)
 
-        if (result.success) {
-          updateVerificationData({ faceVerified: result.faceVerified })
-          if (result.confidence) {
-            setConfidenceScore(result.confidence)
-          }
+      if (result.success) {
+        updateVerificationData({ faceVerified: result.faceVerified })
+        if (result.confidence) {
+          setConfidenceScore(result.confidence)
+        }
 
-          if (!result.faceVerified) {
-            setVerificationError(result.message || "A foto não corresponde ao documento enviado.")
-          }
-        } else {
-          // If backend fails, try frontend verification
-          setVerificationProgress(40)
-          const frontendResult = await FaceVerificationService.verifyFaceMatchFrontend(
-            verificationData.idDocument,
-            verificationData.selfie,
-          )
-
-          setVerificationProgress(90)
-
-          if (frontendResult.success) {
-            updateVerificationData({ faceVerified: frontendResult.faceVerified })
-            if (frontendResult.confidence) {
-              setConfidenceScore(frontendResult.confidence)
-            }
-
-            if (!frontendResult.faceVerified) {
-              setVerificationError(frontendResult.message || "A foto não corresponde ao documento enviado.")
-            }
-          } else {
-            setVerificationError(frontendResult.message || "Falha na verificação facial.")
-          }
+        if (!result.faceVerified) {
+          setVerificationError(result.message || "A foto não corresponde ao documento enviado.")
         }
       } else {
-        // No token, use frontend verification
-        setVerificationProgress(40)
-        const frontendResult = await FaceVerificationService.verifyFaceMatchFrontend(
-          verificationData.idDocument,
-          verificationData.selfie,
-        )
-
-        setVerificationProgress(90)
-
-        if (frontendResult.success) {
-          updateVerificationData({ faceVerified: frontendResult.faceVerified })
-          if (frontendResult.confidence) {
-            setConfidenceScore(frontendResult.confidence)
-          }
-
-          if (!frontendResult.faceVerified) {
-            setVerificationError(frontendResult.message || "Falha na verificação facial.")
-          }
-        } else {
-          setVerificationError(frontendResult.message || "Falha na verificação facial.")
-        }
+        setVerificationError(result.message || "Falha na verificação facial.")
       }
     } catch (error) {
       console.error("Erro ao verificar face:", error)
@@ -195,7 +153,7 @@ export function FaceVerificationEnhanced({ verificationData, updateVerificationD
         setVerificationProgress(0)
       }, 1000)
     }
-  }, [verificationData, updateVerificationData, user, getToken])
+  }, [verificationData, updateVerificationData, getToken])
 
   return (
     <div className="space-y-6">

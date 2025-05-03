@@ -9,7 +9,7 @@ import { FileText, Upload, X, Check, AlertCircle, RefreshCw } from "lucide-react
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
 import { Progress } from "../../components/ui/progress"
 import { useAuth } from "../../contexts/AuthContext"
-import { verifyIdentity, verifyIdentityFrontend } from "../../services/verification.service"
+import { verifyIdentity } from "../../services/verification.service"
 
 interface DocumentUploaderProps {
   verificationData: {
@@ -27,7 +27,7 @@ export function DocumentUploader({
   updateVerificationData,
   onVerifyDocuments,
 }: DocumentUploaderProps) {
-  const { user, getToken } = useAuth()
+  const { getToken } = useAuth()
   const [idPreview, setIdPreview] = useState<string | null>(null)
   const [addressPreview, setAddressPreview] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -127,15 +127,12 @@ export function DocumentUploader({
         result = await onVerifyDocuments(verificationData.idDocument, verificationData.selfie)
       } else {
         // Caso contrário, use a implementação padrão
-        const token = getToken?.() || user?.token
+        // Obter token se disponível (não é mais obrigatório)
+        const token = getToken?.()
 
-        if (token) {
-          setVerificationProgress(50)
-          result = await verifyIdentity(verificationData.idDocument, verificationData.selfie, token)
-        } else {
-          setVerificationProgress(40)
-          result = await verifyIdentityFrontend(verificationData.idDocument, verificationData.selfie)
-        }
+        // A verificação funciona com ou sem token
+        setVerificationProgress(50)
+        result = await verifyIdentity(verificationData.idDocument, verificationData.selfie, token)
       }
 
       setVerificationProgress(90)

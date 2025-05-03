@@ -23,13 +23,11 @@ export function VerificationPage() {
   }
 
   const handleVerifyDocuments = async (idDocument: File, selfie: File) => {
-    const token = getToken?.() || user?.token
+    // Obter token se disponível (não é mais obrigatório)
+    const token = getToken?.()
 
-    if (token) {
-      return await FaceVerificationService.verifyFaceMatch(idDocument, selfie, token)
-    } else {
-      return await FaceVerificationService.verifyFaceMatchFrontend(idDocument, selfie)
-    }
+    // A verificação funciona com ou sem token
+    return await FaceVerificationService.verifyFaceMatch(idDocument, selfie, token)
   }
 
   return (
