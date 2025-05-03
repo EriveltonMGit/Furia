@@ -1,5 +1,3 @@
-import { API_URL } from "./auth.service"
-
 export interface VerificationResponse {
   success: boolean
   faceVerified: boolean
@@ -14,12 +12,12 @@ export interface VerificationResponse {
 export class FaceVerificationService {
   /**
    * Verifica se a face na selfie corresponde à face no documento de identidade
+   * Usa diretamente a API Gemini sem necessidade de autenticação
    * @param idDocument - O arquivo de imagem do documento de identidade (RG, CNH, etc.)
    * @param selfie - O arquivo de imagem da selfie
-   * @param token - Token JWT de autenticação (opcional)
    * @returns Promise com o resultado da verificação
    */
-  static async verifyFaceMatch(idDocument: File, selfie: File, token?: string): Promise<VerificationResponse> {
+  static async verifyFaceMatch(idDocument: File, selfie: File): Promise<VerificationResponse> {
     try {
       // Validar entradas
       if (!idDocument || !selfie) {
@@ -40,74 +38,21 @@ export class FaceVerificationService {
         }
       }
 
-      // Se não houver token ou estiver em modo de verificação sem autenticação,
-      // use diretamente a verificação frontend
-      if (!token) {
-        console.log("Token não fornecido, usando verificação frontend")
-        return await FaceVerificationService.verifyFaceMatchFrontend(idDocument, selfie)
-      }
-
-      // Criar FormData
-      const formData = new FormData()
-      formData.append("idDocument", idDocument)
-      formData.append("selfie", selfie)
-
-      console.log("Enviando requisição para:", `${API_URL}/api/verification/verify-identity`)
-
-      // Preparar headers
-      const headers: HeadersInit = {}
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`
-      }
-
-      // Enviar requisição para o backend
-      const response = await fetch(`${API_URL}/api/verification/verify-identity`, {
-        method: "POST",
-        headers,
-        body: formData,
-        credentials: "include", // Importante para cookies de sessão
-      })
-
-      console.log("Status da resposta:", response.status)
-
-      // Tratar resposta
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.log("Erro de autenticação, tentando verificação frontend")
-          return await FaceVerificationService.verifyFaceMatchFrontend(idDocument, selfie)
-        }
-
-        if (response.status === 404) {
-          console.error("Endpoint de verificação não encontrado")
-          // Se o endpoint não for encontrado, tente a verificação frontend
-          return await FaceVerificationService.verifyFaceMatchFrontend(idDocument, selfie)
-        }
-
-        const errorData = await response.json().catch(() => ({}))
-        return {
-          success: false,
-          faceVerified: false,
-          message: errorData.message || "Erro ao verificar identidade",
-        }
-      }
-
-      const data = await response.json()
-      return {
-        success: true,
-        faceVerified: data.faceVerified,
-        message: data.message,
-        confidence: data.confidence,
-      }
+      // Usar diretamente a verificação frontend com Gemini API
+      console.log("Usando verificação direta com Gemini API")
+      return await FaceVerificationService.verifyFaceMatchFrontend(idDocument, selfie)
     } catch (error) {
       console.error("Erro no serviço de verificação facial:", error)
-      // Se ocorrer um erro na comunicação com o backend, tente a verificação frontend
-      return await FaceVerificationService.verifyFaceMatchFrontend(idDocument, selfie)
+      return {
+        success: false,
+        faceVerified: false,
+        message: "Falha ao processar a verificação facial",
+      }
     }
   }
 
   /**
    * Realiza a verificação facial diretamente no frontend usando a API Gemini
-   * Este é um método principal quando não há autenticação ou quando o backend falha
    * Requer NEXT_PUBLIC_GEMINI_API_KEY definido nas variáveis de ambiente
    */
   static async verifyFaceMatchFrontend(idDocument: File, selfie: File): Promise<VerificationResponse> {
@@ -122,7 +67,7 @@ export class FaceVerificationService {
         }
       }
 
-      console.log("Iniciando verificação frontend com Gemini API")
+      console.log("Iniciando verificação com Gemini API")
 
       // Converter arquivos para base64
       const [idDocumentBase64, selfieBase64] = await Promise.all([
@@ -143,11 +88,13 @@ export class FaceVerificationService {
       - Não há indícios de fraude ou manipulação nas imagens
 
       Retorne um JSON com a seguinte estrutura:
+      \`\`\`json
       {
         "match": boolean (true se houver correspondência),
         "confidence": number (0 a 1, nível de confiança),
         "reasons": string[] (razões para a decisão)
-      }`
+      }
+      \`\`\``
 
       const requestData = {
         contents: [
@@ -193,13 +140,17 @@ export class FaceVerificationService {
       }
 
       const data = await response.json()
-      const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || ""
+      let resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || ""
 
       console.log("Resposta da Gemini API:", resultText)
 
       // Analisar resultado
       try {
-        // Tentar parsear o JSON retornado pelo Gemini
+        // Tentar extrair o JSON da resposta (removendo backticks e quebras de linha)
+        const jsonMatch = resultText.match(/```json\s*([\s\S]*?)\s*```/)
+        if (jsonMatch && jsonMatch[1]) {
+          resultText = jsonMatch[1].trim()
+        }
         const result = JSON.parse(resultText)
         const isMatch = result.match === true
 
@@ -211,7 +162,7 @@ export class FaceVerificationService {
           reasons: result.reasons,
         }
       } catch (e) {
-        console.error("Erro ao parsear resposta do Gemini:", e)
+        console.error("Erro ao parsear resposta do Gemini:", e, "Texto da resposta:", resultText)
 
         // Se não conseguir parsear o JSON, tenta analisar o texto
         const isMatch =
@@ -256,11 +207,10 @@ export class FaceVerificationService {
   }
 }
 
-// Funções exportadas para compatibilidade com a nova implementação
-export const verifyIdentity = async (idDocument: File, selfie: File, token?: string): Promise<VerificationResponse> => {
-  return await FaceVerificationService.verifyFaceMatch(idDocument, selfie, token)
+// Funções exportadas para compatibilidade com a implementação existente
+export const verifyIdentity = async (idDocument: File, selfie: File): Promise<VerificationResponse> => {
+  return await FaceVerificationService.verifyFaceMatch(idDocument, selfie)
 }
-
 export const verifyIdentityFrontend = async (idDocument: File, selfie: File): Promise<VerificationResponse> => {
   return await FaceVerificationService.verifyFaceMatchFrontend(idDocument, selfie)
 }

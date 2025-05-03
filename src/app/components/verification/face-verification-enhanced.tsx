@@ -6,7 +6,6 @@ import { Camera, Check, RefreshCw, AlertCircle, Shield } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
 import { Button } from "../../components/ui/button"
 import { Progress } from "../../components/ui/progress"
-import { useAuth } from "../../contexts/AuthContext"
 import { FaceVerificationService } from "../../services/verification.service"
 
 interface FaceVerificationProps {
@@ -28,7 +27,6 @@ export function FaceVerificationEnhanced({ verificationData, updateVerificationD
   const [confidenceScore, setConfidenceScore] = useState<number | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { user, getToken } = useAuth()
 
   useEffect(() => {
     return () => {
@@ -116,16 +114,9 @@ export function FaceVerificationEnhanced({ verificationData, updateVerificationD
     try {
       setVerificationProgress(30)
 
-      // Obter token se disponível (não é mais obrigatório)
-      const token = getToken?.()
-
-      // Verificação pode funcionar com ou sem token
+      // Verificação direta sem autenticação
       setVerificationProgress(50)
-      const result = await FaceVerificationService.verifyFaceMatch(
-        verificationData.idDocument,
-        verificationData.selfie,
-        token,
-      )
+      const result = await FaceVerificationService.verifyFaceMatch(verificationData.idDocument, verificationData.selfie)
 
       setVerificationProgress(90)
 
@@ -153,7 +144,7 @@ export function FaceVerificationEnhanced({ verificationData, updateVerificationD
         setVerificationProgress(0)
       }, 1000)
     }
-  }, [verificationData, updateVerificationData, getToken])
+  }, [verificationData, updateVerificationData])
 
   return (
     <div className="space-y-6">
