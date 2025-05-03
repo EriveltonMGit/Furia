@@ -1,16 +1,15 @@
-// src/types/user.ts
 
-// Interface para a estrutura completa dos dados do perfil do usuário
-// Reflete a estrutura retornada pela sua API /api/profile + dados adicionais no frontend
 interface UserProfileData {
-    user?: { // Objeto user da API. Pode ser opcional/nulo inicialmente ou se a API retornar assim.
+    user?: { 
       id: number;
-      name: string;
-      email: string;
-      role: string;
-      created_at: string;
+    name: string;
+    email: string;
+    role: string;
+    created_at: string;
+    faceVerified?: boolean;
+    verificationDate?: string;
     };
-    profile?: { // Objeto profile da API. Pode ser opcional/nulo.
+    profile?: {
       id?: number;
       user_id?: number;
       cpf?: string | null;
@@ -21,28 +20,28 @@ interface UserProfileData {
       zip_code?: string | null;
       phone?: string | null;
       profile_image?: string | null;
-      verification_status?: string | null;
+      verification_status?: "pending" | "verified" | "rejected" | null;
       fan_level?: string | null;
       fan_points?: number | null;
       created_at?: string;
       updated_at?: string;
-    } | null; // O objeto profile retornado pela API pode ser null
+    } | null;
   
     // Objetos aninhados para interesses, atividades, etc. da API
-    interests?: { // Objeto interests da API. Pode ser nulo.
-        favoriteGames?: string[]; // Assumindo que safeJsonParse os transforma em arrays de strings
+    interests?: { 
+        favoriteGames?: string[];
         favoriteTeams?: string[];
         followedPlayers?: string[];
         preferredPlatforms?: string[];
     } | null;
-    activities?: { // Objeto activities da API. Pode ser nulo.
+    activities?: {
         eventsAttended?: string[];
         purchasedMerchandise?: string[];
         subscriptions?: string[];
         competitionsParticipated?: string[];
     } | null;
-    socialConnections?: { // Objeto socialConnections da API. Pode ser nulo.
-        twitter?: string | number | null; // Baseado no seu exemplo (0)
+    socialConnections?: { 
+        twitter?: string | number | null; 
         instagram?: string | number | null;
         facebook?: string | number | null;
         discord?: string | number | null;
@@ -51,11 +50,11 @@ interface UserProfileData {
         faceitProfile?: string | null;
         hltv?: string | null;
         vlr?: string | null;
-        otherProfiles?: string[]; // Assumindo array de strings
+        otherProfiles?: string[]; 
     } | null;
   
     // Propriedades adicionais que você inclui no estado userData no frontend
-    profileCompletion: number; // Inclua todas as propriedades que você passa
+    profileCompletion: number; 
     memberSince: string;
     upcomingEvents: { id: number; name: string; date: string; location: string }[];
     exclusiveOffers: { id: number; name: string; expires: string; code?: string }[];
@@ -64,3 +63,12 @@ interface UserProfileData {
   
   // Exporte a interface
   export type { UserProfileData };
+
+  // Tipos para a verificação
+export interface VerificationResult {
+  success: boolean;
+  faceVerified: boolean;
+  confidence?: number;
+  reasons?: string[];
+  message?: string;
+}
