@@ -6,28 +6,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { FaceVerificationEnhanced } from "./face-verification-enhanced"
 import { DocumentUploader } from "./document-uploader"
 import { FaceVerificationService } from "../../services/verification.service"
-import { useAuth } from "../../contexts/AuthContext"
 
 export function VerificationPage() {
-  const [verificationData, setVerificationData] = useState({
-    idDocument: null as File | null,
-    selfie: null as File | null,
-    addressProof: null as File | null,
-    faceVerified: false,
-  })
+    const [verificationData, setVerificationData] = useState({
+      idDocument: null as File | null,
+      selfie: null as File | null,
+      addressProof: null as File | null,
+      faceVerified: false,
+    })
 
-  const { user, getToken } = useAuth()
-
-  const updateVerificationData = (data: Partial<typeof verificationData>) => {
-    setVerificationData((prev) => ({ ...prev, ...data }))
-  }
-
+    const updateVerificationData = (data: Partial<typeof verificationData>) => {
+        setVerificationData((prev) => ({ ...prev, ...data }))
+      }
+    
+      // Função simplificada sem token
   const handleVerifyDocuments = async (idDocument: File, selfie: File) => {
-    // Obter token se disponível (não é mais obrigatório)
-    const token = getToken?.()
-
-    // A verificação funciona com ou sem token
-    return await FaceVerificationService.verifyFaceMatch(idDocument, selfie, token)
+    return await FaceVerificationService.verifyFaceMatch(idDocument, selfie)
   }
 
   return (

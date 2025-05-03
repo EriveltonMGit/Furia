@@ -1,42 +1,41 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect, useCallback } from "react"
-import { Card, CardContent } from "../../components/ui/card"
-import { Camera, Check, RefreshCw, AlertCircle, Shield } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
-import { Button } from "../../components/ui/button"
-import { Progress } from "../../components/ui/progress"
-import { useAuth } from "../../contexts/AuthContext"
-import { verifyIdentity, verifyIdentityFrontend, type VerificationResponse } from "../../services/verification.service"
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Card, CardContent } from "../../components/ui/card";
+import { Camera, Check, RefreshCw, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
+import { verifyIdentity } from "../../services/verification.service";
+import { useAuth } from "../../contexts/AuthContext";
+import { Progress } from "../../components/ui/progress";
 
 interface FaceVerificationProps {
   verificationData: {
-    idDocument: File | null
-    selfie: File | null
-    addressProof: File | null
-    faceVerified: boolean
-  }
-  updateVerificationData: (data: Partial<FaceVerificationProps["verificationData"]>) => void
+    idDocument: File | null;
+    selfie: File | null;
+    addressProof: File | null;
+    faceVerified: boolean;
+  };
+  updateVerificationData: (data: Partial<FaceVerificationProps["verificationData"]>) => void;
 }
 
 export function FaceVerification({ verificationData, updateVerificationData }: FaceVerificationProps) {
-  const [stream, setStream] = useState<MediaStream | null>(null)
-  const [capturedImage, setCapturedImage] = useState<string | null>(null)
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [verificationError, setVerificationError] = useState<string | null>(null)
-  const [verificationProgress, setVerificationProgress] = useState(0)
-  const [confidenceScore, setConfidenceScore] = useState<number | null>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { user, getToken } = useAuth()
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [verificationProgress, setVerificationProgress] = useState(0);
+  const [confidenceScore, setConfidenceScore] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     return () => {
       if (stream) {
-        stream.getTracks().forEach((track) => track.stop())
+        stream.getTracks().forEach((track) => track.stop());
       }
-    }
-  }, [stream])
+    };
+  }, [stream]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -46,127 +45,94 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
           height: { ideal: 720 },
           facingMode: "user",
         },
-      })
-      setStream(mediaStream)
+      });
+      setStream(mediaStream);
 
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
+        videoRef.current.srcObject = mediaStream;
       }
     } catch (err) {
-      console.error("Error accessing camera:", err)
-      setVerificationError("Não foi possível acessar a câmera. Verifique as permissões do navegador.")
+      console.error("Error accessing camera:", err);
+      setVerificationError("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
     }
-  }, [])
+  }, []);
 
   const stopCamera = useCallback(() => {
     if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
-      setStream(null)
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
     }
-  }, [stream])
+  }, [stream]);
 
   const captureImage = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current
-      const canvas = canvasRef.current
-      const context = canvas.getContext("2d")
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
 
       if (context) {
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        context.drawImage(video, 0, 0, canvas.width, canvas.height)
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const imageDataUrl = canvas.toDataURL("image/png")
-        setCapturedImage(imageDataUrl)
+        const imageDataUrl = canvas.toDataURL("image/png");
+        setCapturedImage(imageDataUrl);
 
         canvas.toBlob((blob) => {
           if (blob) {
-            const file = new File([blob], "selfie.png", { type: "image/png" })
-            updateVerificationData({ selfie: file })
+            const file = new File([blob], "selfie.png", { type: "image/png" });
+            updateVerificationData({ selfie: file });
           }
-        }, "image/png")
+        }, "image/png");
 
-        stopCamera()
+        stopCamera();
       }
     }
-  }, [stopCamera, updateVerificationData])
+  }, [stopCamera, updateVerificationData]);
 
   const resetCapture = useCallback(() => {
-    setCapturedImage(null)
-    updateVerificationData({ selfie: null })
-    setConfidenceScore(null)
-    setVerificationError(null)
-    startCamera()
-  }, [startCamera, updateVerificationData])
+    setCapturedImage(null);
+    updateVerificationData({ selfie: null });
+    setConfidenceScore(null);
+    startCamera();
+  }, [startCamera, updateVerificationData]);
 
   const verifyFace = useCallback(async () => {
-    setIsVerifying(true)
-    setVerificationError(null)
-    setVerificationProgress(10)
+    setIsVerifying(true);
+    setVerificationError(null);
 
     if (!verificationData.idDocument || !verificationData.selfie) {
-      setVerificationError("Por favor, envie o documento de identidade e capture a selfie.")
-      setIsVerifying(false)
-      setVerificationProgress(0)
-      return
+      setVerificationError("Por favor, envie o documento de identidade e capture a selfie.");
+      setIsVerifying(false);
+      return;
     }
 
     try {
-      // Obter o token de autenticação
-      const token = getToken()
+      setVerificationProgress(30);
+      // Chamada direta sem verificação de token
+      const result = await verifyIdentity(verificationData.idDocument, verificationData.selfie);
 
-      if (!token) {
-        setVerificationError("Usuário não autenticado. Por favor, faça login novamente.")
-        setIsVerifying(false)
-        setVerificationProgress(0)
-        return
+      setVerificationProgress(90);
+      updateVerificationData({ faceVerified: result.faceVerified });
+
+      if (result.confidence) {
+        setConfidenceScore(result.confidence);
       }
 
-      setVerificationProgress(30)
-      console.log("Iniciando verificação com token:", token)
-
-      let result: VerificationResponse
-
-      try {
-        // Tentar verificação pelo backend primeiro
-        setVerificationProgress(50)
-        result = await verifyIdentity(verificationData.idDocument, verificationData.selfie, token)
-        setVerificationProgress(90)
-      } catch (error) {
-        console.error("Erro na verificação pelo backend, tentando frontend:", error)
-
-        // Se falhar, tentar verificação pelo frontend
-        setVerificationProgress(40)
-        result = await verifyIdentityFrontend(verificationData.idDocument, verificationData.selfie)
-        setVerificationProgress(90)
-      }
-
-      if (result.success) {
-        updateVerificationData({ faceVerified: result.faceVerified })
-
-        if (result.confidence) {
-          setConfidenceScore(result.confidence)
-        }
-
-        if (!result.faceVerified) {
-          setVerificationError("A foto não corresponde ao documento enviado. Por favor, tente novamente.")
-        }
-      } else {
-        setVerificationError(result.message || "Erro ao verificar a identidade.")
+      if (!result.faceVerified) {
+        setVerificationError(result.message || "A foto não corresponde ao documento enviado.");
       }
     } catch (error) {
-      console.error("Erro ao verificar face:", error)
-      setVerificationError(error instanceof Error ? error.message : "Erro desconhecido na verificação.")
+      console.error("Erro na verificação:", error);
+      setVerificationError(error instanceof Error ? error.message : "Erro ao verificar documentos.");
     } finally {
-      setVerificationProgress(100)
-      setIsVerifying(false)
-
-      // Reset progress after a delay
+      setVerificationProgress(100);
+      setIsVerifying(false);
       setTimeout(() => {
-        setVerificationProgress(0)
-      }, 1000)
+        setVerificationProgress(0);
+      }, 1000);
     }
-  }, [verificationData, updateVerificationData, getToken])
+  }, [verificationData, updateVerificationData]);
 
   return (
     <div className="space-y-6">
@@ -181,13 +147,13 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
                 <div className="relative aspect-video bg-black rounded-md overflow-hidden">
                   {!stream && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <Button
-                        onClick={startCamera}
+                      <button 
+                        onClick={startCamera} 
                         className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 py-2 px-4"
                       >
                         <Camera className="mr-2 h-4 w-4" />
                         Iniciar Câmera
-                      </Button>
+                      </button>
                     </div>
                   )}
                   <video
@@ -200,13 +166,13 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
                 </div>
 
                 {stream && (
-                  <Button
-                    onClick={captureImage}
+                  <button 
+                    onClick={captureImage} 
                     className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-[#00FF00] text-white shadow hover:bg-[#38a838] h-10 py-2 px-4 w-full"
                   >
                     <Camera className="mr-2 h-4 w-4" />
                     Capturar Foto
-                  </Button>
+                  </button>
                 )}
               </div>
             ) : (
@@ -220,18 +186,18 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
                 </div>
 
                 <div className="flex gap-2">
-                  <Button
-                    onClick={resetCapture}
+                  <button 
+                    onClick={resetCapture} 
                     className="inline-flex items-center justify-center rounded-md border border-input bg-background text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 py-2 px-4 flex-1"
                   >
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Nova Foto
-                  </Button>
+                  </button>
 
-                  <Button
+                  <button
                     onClick={verifyFace}
                     className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-[#00FF00] text-white shadow hover:bg-[#34a334] h-10 py-2 px-4 flex-1"
-                    disabled={isVerifying || verificationData.faceVerified || !verificationData.idDocument}
+                    disabled={isVerifying || verificationData.faceVerified}
                   >
                     {isVerifying ? (
                       <>
@@ -244,12 +210,9 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
                         Verificado
                       </>
                     ) : (
-                      <>
-                        <Shield className="mr-2 h-4 w-4" />
-                        Verificar
-                      </>
+                      "Verificar"
                     )}
-                  </Button>
+                  </button>
                 </div>
 
                 {isVerifying && (
@@ -307,5 +270,5 @@ export function FaceVerification({ verificationData, updateVerificationData }: F
         </AlertDescription>
       </Alert>
     </div>
-  )
+  );
 }

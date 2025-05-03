@@ -8,7 +8,6 @@ import { Card, CardContent } from "../../components/ui/card"
 import { FileText, Upload, X, Check, AlertCircle, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert"
 import { Progress } from "../../components/ui/progress"
-import { useAuth } from "../../contexts/AuthContext"
 import { verifyIdentity } from "../../services/verification.service"
 
 interface DocumentUploaderProps {
@@ -27,7 +26,6 @@ export function DocumentUploader({
   updateVerificationData,
   onVerifyDocuments,
 }: DocumentUploaderProps) {
-  const { getToken } = useAuth()
   const [idPreview, setIdPreview] = useState<string | null>(null)
   const [addressPreview, setAddressPreview] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -109,40 +107,26 @@ export function DocumentUploader({
       })
       return
     }
-
+  
     setIsVerifying(true)
     setVerificationProgress(10)
     setErrors({
       ...errors,
       verification: "",
     })
-
+  
     try {
-      setVerificationProgress(30)
-
-      let result
-
-      // Se houver uma função personalizada de verificação, use-a
-      if (onVerifyDocuments) {
-        result = await onVerifyDocuments(verificationData.idDocument, verificationData.selfie)
-      } else {
-        // Caso contrário, use a implementação padrão
-        // Obter token se disponível (não é mais obrigatório)
-        const token = getToken?.()
-
-        // A verificação funciona com ou sem token
-        setVerificationProgress(50)
-        result = await verifyIdentity(verificationData.idDocument, verificationData.selfie, token)
-      }
-
+      setVerificationProgress(50)
+      // Chamada direta sem verificação de token
+      const result = await verifyIdentity(verificationData.idDocument, verificationData.selfie)
+  
       setVerificationProgress(90)
-
       updateVerificationData({ faceVerified: result.faceVerified })
-
+  
       if (result.confidence) {
         setConfidenceScore(result.confidence)
       }
-
+  
       if (!result.faceVerified) {
         setErrors({
           ...errors,
@@ -157,8 +141,6 @@ export function DocumentUploader({
     } finally {
       setVerificationProgress(100)
       setIsVerifying(false)
-
-      // Reset progress after a delay
       setTimeout(() => {
         setVerificationProgress(0)
       }, 1000)
