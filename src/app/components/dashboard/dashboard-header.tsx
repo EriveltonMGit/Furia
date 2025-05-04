@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/button";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
@@ -9,7 +9,6 @@ import {
   LogOut,
   Menu,
   Settings,
-  User,
   Home,
   MessageSquare,
   Users,
@@ -33,6 +32,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from "../../components/ui/sheet";
 import { DocumentUploader } from "../verification/document-uploader";
 import { VerificationModal } from "./verificationModal";
@@ -55,6 +55,7 @@ export function DashboardHeader({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const { logout } = useAuth();
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   const getInitials = (name: string) =>
     name
@@ -77,6 +78,24 @@ export function DashboardHeader({
     setIsMobileMenuOpen(false);
   };
 
+  // Fechar o menu ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        sheetRef.current &&
+        !sheetRef.current.contains(event.target as Node) &&
+        isMobileMenuOpen
+      ) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
+
   return (
     <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
       <div className="container mx-auto px-4 py-3 sm:py-4 flex justify-between items-center">
@@ -92,7 +111,7 @@ export function DashboardHeader({
             </span>
           </Link>
 
-          {/* Navegação para desktop (mostrar a partir de lg) */}
+          {/* Navegação para desktop */}
           <nav className="hidden lg:flex space-x-6 ml-6">
             <button
               onClick={() => setActiveTab("overview")}
@@ -128,12 +147,12 @@ export function DashboardHeader({
         </div>
 
         <div className="flex items-center space-x-3 sm:space-x-4">
-          {/* Info do usuário para desktop (mostrar a partir de lg) */}
+          {/* Info do usuário para desktop */}
           <div className="hidden lg:flex flex-col items-end mr-4">
             <span className="text-sm text-white">{userData.user.name}</span>
           </div>
 
-          {/* Botões de ação - sempre visíveis exceto em mobile */}
+          {/* Botões de ação */}
           <Button
             variant="ghost"
             size="icon"
@@ -148,7 +167,7 @@ export function DashboardHeader({
             <span className="absolute top-1 right-1 h-2 w-2 bg-[#00FF00] rounded-full" />
           </Button>
 
-          {/* Avatar - sempre visível */}
+          {/* Avatar */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -196,16 +215,23 @@ export function DashboardHeader({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Menu mobile (mostrar apenas abaixo de lg) */}
+          {/* Menu mobile */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="lg:hidden"
+                onClick={() => setIsMobileMenuOpen(true)}
+              >
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent
+              ref={sheetRef}
               side="right"
               className="bg-gray-900 border-l border-gray-800 w-72"
+              onInteractOutside={() => setIsMobileMenuOpen(false)}
             >
               <SheetHeader className="mb-4">
                 <SheetTitle className="text-white flex items-center">
@@ -261,37 +287,36 @@ export function DashboardHeader({
                       icon: <Users className="h-5 w-5" />,
                     },
                   ].map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => handleMenuItemClick(item.id)}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-white"
-                    >
-                      {item.icon}
-                      {item.label}
-                    </button>
+                    <SheetClose asChild key={item.id}>
+                      <button
+                        onClick={() => handleMenuItemClick(item.id)}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-white"
+                      >
+                        {item.icon}
+                        {item.label}
+                      </button>
+                    </SheetClose>
                   ))}
                 </div>
                 <div className="border-t border-gray-700 pt-2">
-                  <button
-                    onClick={() => {
-                      setSettingsOpen(true);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-white"
-                  >
-                    <Settings className="h-5 w-5" />
-                    Configurações
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-red-400"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    Sair
-                  </button>
+                  <SheetClose asChild>
+                    <button
+                      onClick={() => setSettingsOpen(true)}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-white"
+                    >
+                      <Settings className="h-5 w-5" />
+                      Configurações
+                    </button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-red-400"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Sair
+                    </button>
+                  </SheetClose>
                 </div>
               </div>
             </SheetContent>

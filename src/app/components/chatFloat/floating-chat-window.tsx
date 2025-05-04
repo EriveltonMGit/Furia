@@ -154,15 +154,15 @@ export default function FloatingChatWindow({ isOpen, onClose }: FloatingChatWind
   return (
     <div
     className={cn(
-      "fixed z-40 bg-[#111111] rounded-lg shadow-xl flex flex-col transition-all duration-300 transform ",
-      "bottom-[6rem] right-4 w-[calc(100vw-2rem)] h-[80vh] max-w-[340px] max-h-[600px]", // Mobile
+     "fixed z-40 bg-[#111111]/70 rounded-lg shadow-xl flex flex-col transition-all duration-300 transform backdrop-blur-sm",
+      "bottom-[9rem] right-6 w-[calc(100vw-2rem)] h-[80vh] max-w-[340px] max-h-[600px]", // Mobile
       "md:bottom-10 md:right-[5rem] md:w-[330px] md:h-[500px]", // Desktop: afasta mais do lado direito
       isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
     )}
   >
   
       {/* Cabeçalho */}
-      <div className="p-3 border-b border-[#222222] bg-[#0A0A0A] rounded-t-lg flex justify-between items-center">
+      <div className="p-3 border-b border-[#0A0A0A] bg-[#0A0A0A] rounded-t-lg flex justify-between items-center">
         <div className="flex items-center">
           <div className="h-8 w-8 rounded-full bg-[#ffffff] flex items-center justify-center mr-2 relative overflow-hidden">
             <img src="/img/logo.png" alt="FURIA" className="h-6 w-6" />

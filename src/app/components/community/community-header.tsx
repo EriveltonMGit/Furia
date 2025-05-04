@@ -15,8 +15,8 @@ export default function CommunityHeader() {
 
   // Mock user data
   const user = {
-    name: "Carlos Silva",
-    email: "carlos.silva@email.com",
+    name: "Nome do usuário - em Breve",
+    email: "example@email.com",
     avatar: "/img/logo.png",
   }
 
@@ -29,7 +29,7 @@ export default function CommunityHeader() {
   }
 
   return (
-    <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-1">
+    <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-1 ">
       <div className="container mx-auto py-4 px-4 flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/" className="flex items-center mr-8">
@@ -85,12 +85,13 @@ export default function CommunityHeader() {
                   </Link>
                   <Link
                     href="/events"
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800"
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800  " 
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Calendar className="h-5 w-5 mt-6" />
+               
                     Eventos
                   </Link>
+                  
                   <Link
                     href="/chat"
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800"
@@ -99,6 +100,7 @@ export default function CommunityHeader() {
                     <MessageSquare className="h-5 w-5" />
                     Chat
                   </Link>
+                  <Calendar className="h-5 w-5 mt-6 " />
                 </div>
               </div>
             </SheetContent>
