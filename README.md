@@ -1,4 +1,4 @@
-# Projeto Fúria (Em Produção/Hospedado)
+# Projeto Fúria
 
 ## Visão Geral
 
