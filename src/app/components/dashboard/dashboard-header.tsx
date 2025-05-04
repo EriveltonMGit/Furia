@@ -4,7 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/button";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
-import { Bell, LogOut, Menu, Settings, User, Home, MessageSquare, Users, Calendar, ShoppingBag } from "lucide-react";
+import {
+  Bell,
+  LogOut,
+  Menu,
+  Settings,
+  User,
+  Home,
+  MessageSquare,
+  Users,
+  Calendar,
+  ShoppingBag,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -80,7 +91,7 @@ export function DashboardHeader({
               FURIA Fan Hub
             </span>
           </Link>
-          
+
           {/* Navegação para desktop (mostrar a partir de lg) */}
           <nav className="hidden lg:flex space-x-6 ml-6">
             <button
@@ -123,16 +134,16 @@ export function DashboardHeader({
           </div>
 
           {/* Botões de ação - sempre visíveis exceto em mobile */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="hidden sm:inline-flex"
             onClick={() => setSettingsOpen(true)}
           >
             <Settings className="h-5 w-5" />
           </Button>
 
-          <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
+          <Button variant="ghost" size="icon" className="hidden sm:inline-flex relative">
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 bg-[#00FF00] rounded-full" />
           </Button>
@@ -151,23 +162,23 @@ export function DashboardHeader({
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              className="w-64 border border-gray-700 bg-gray-800" 
-              align="end" 
+            <DropdownMenuContent
+              className="w-64 border border-gray-700 bg-gray-800"
+              align="end"
               forceMount
             >
               <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-  <p className="text-sm font-medium leading-none text-white truncate max-w-[180px] md:max-w-[220px] lg:max-w-none">
-    {userData.user.name}
-  </p>
-  <p className="text-xs leading-none text-gray-400 truncate max-w-[180px] md:max-w-[220px] lg:max-w-none hidden sm:block">
-    {userData.user.email}
-  </p>
-</div>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none text-white truncate max-w-[180px] md:max-w-[220px] lg:max-w-none">
+                    {userData.user.name}
+                  </p>
+                  <p className="text-xs leading-none text-gray-400 truncate max-w-[180px] md:max-w-[220px] lg:max-w-none hidden sm:block">
+                    {userData.user.email}
+                  </p>
+                </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-700" />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => setSettingsOpen(true)}
                 className="text-white hover:bg-gray-700 focus:bg-gray-700"
               >
@@ -176,7 +187,7 @@ export function DashboardHeader({
               <div className="flex items-start justify-start border-none">
                 <VerificationModal />
               </div>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={handleLogout}
                 className="text-red-400 hover:bg-gray-700 focus:bg-gray-700"
               >
@@ -192,8 +203,8 @@ export function DashboardHeader({
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent 
-              side="right" 
+            <SheetContent
+              side="right"
               className="bg-gray-900 border-l border-gray-800 w-72"
             >
               <SheetHeader className="mb-4">
@@ -209,10 +220,14 @@ export function DashboardHeader({
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800">
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback>{getInitials(userData.user.name)}</AvatarFallback>
+                    <AvatarFallback>
+                      {getInitials(userData.user.name)}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-medium text-white">{userData.user.name}</p>
+                    <p className="text-sm font-medium text-white">
+                      {userData.user.name}
+                    </p>
                     <p className="text-xs text-gray-400">
                       {userData.user.email}
                     </p>
@@ -220,11 +235,31 @@ export function DashboardHeader({
                 </div>
                 <div className="space-y-1">
                   {[
-                    { id: "overview", label: "Dashboard", icon: <Home className="h-5 w-5" /> },
-                    { id: "events", label: "Eventos", icon: <Calendar className="h-5 w-5" /> },
-                    { id: "offers", label: "Recompensas", icon: <ShoppingBag className="h-5 w-5" /> },
-                    { id: "chat", label: "Chat", icon: <MessageSquare className="h-5 w-5" /> },
-                    { id: "community", label: "Comunidade", icon: <Users className="h-5 w-5" /> },
+                    {
+                      id: "overview",
+                      label: "Dashboard",
+                      icon: <Home className="h-5 w-5" />,
+                    },
+                    {
+                      id: "events",
+                      label: "Eventos",
+                      icon: <Calendar className="h-5 w-5" />,
+                    },
+                    {
+                      id: "offers",
+                      label: "Recompensas",
+                      icon: <ShoppingBag className="h-5 w-5" />,
+                    },
+                    {
+                      id: "chat",
+                      label: "Chat",
+                      icon: <MessageSquare className="h-5 w-5" />,
+                    },
+                    {
+                      id: "community",
+                      label: "Comunidade",
+                      icon: <Users className="h-5 w-5" />,
+                    },
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -238,14 +273,20 @@ export function DashboardHeader({
                 </div>
                 <div className="border-t border-gray-700 pt-2">
                   <button
-                    onClick={() => { setSettingsOpen(true); setIsMobileMenuOpen(false); }}
+                    onClick={() => {
+                      setSettingsOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-white"
                   >
                     <Settings className="h-5 w-5" />
                     Configurações
                   </button>
                   <button
-                    onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-red-400"
                   >
                     <LogOut className="h-5 w-5" />

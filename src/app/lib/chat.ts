@@ -1,21 +1,30 @@
-// src/app/lib/chat.ts
-// Importa a função principal e a função de limpar histórico do gemini.ts
-// ✅ Certifique-se de que o caminho para gemini.ts está correto
-import { generateGeminiResponse, clearChatHistory } from "./gemini";
+// src/app/lib/chat.ts - Wrapper para a lógica Server-Side do Gemini
+// Este arquivo NÃO DEVE TER 'use client'.
+// Ele é importado pela rota de API e chama a lógica server-side.
+
+// ✅ Importa as funções do novo arquivo server-side
+import { generateGeminiResponse, clearChatHistory as clearServerChatHistory } from "./gemini";
 
 // Função que serve como wrapper para generateGeminiResponse
-// ✅ AGORA ACEITA O PARÂMETRO OPCIONAL userName
+// É chamada pela rota de API.
 export async function generateChatResponse(message: string, userName?: string): Promise<string> {
   try {
-    // Usar o Gemini para gerar a resposta, ✅ PASSANDO O userName RECEBIDO
+    // Chama a lógica server-side para gerar a resposta
     const response = await generateGeminiResponse(message, userName);
     return response;
   } catch (error) {
-    console.error("Erro ao gerar resposta:", error);
-
-    // O fallback em gemini.ts já lida com a mensagem de erro genérica
-    // Então, apenas retornamos essa mensagem de erro
-    return "Desculpe, estou enfrentando alguns problemas técnicos. Tente novamente em alguns instantes ou pergunte sobre outro assunto. #DIADEFURIA 🐆";
+    console.error("Erro ao gerar resposta no wrapper chat.ts:", error);
+    // generateGeminiResponse já trata os erros internos e retorna um fallback.
+    // Este catch é para erros ANTES ou DURANTE a chamada a generateGeminiResponse.
+    return "Desculpe, estou enfrentando um problema inesperado no serviço de chat. Tente novamente mais tarde. #DIADEFURIA 🐆";
   }
 }
 
+// ✅ Exporta a função de limpeza do histórico do lado do SERVIDOR
+// Renomeada para deixar claro que limpa o histórico na instância atual do servidor
+export function clearChatHistory(): void {
+    clearServerChatHistory();
+}
+
+// // Se você tiver um endpoint POST separado para limpar o chat (ex: /api/chat/reset),
+// // a rota de API chamaria diretamente a função clearChatHistory exportada acima.
