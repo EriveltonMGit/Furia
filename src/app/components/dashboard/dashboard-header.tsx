@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/button";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
-import { Bell, LogOut, Menu, Settings, User, Home, MessageSquare, Users, Calendar, ShoppingBag } from "lucide-react"; // Adicionado Home, MessageSquare, Users
+import { Bell, LogOut, Menu, Settings, User, Home, MessageSquare, Users, Calendar, ShoppingBag } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -16,7 +16,6 @@ import {
 import { SettingsDialog } from "../../components/Settings/settings-dialog";
 import { useAuth } from "../../contexts/AuthContext";
 import Link from "next/link";
-// Imports para o Sheet (menu lateral)
 import {
   Sheet,
   SheetContent,
@@ -42,8 +41,7 @@ export function DashboardHeader({
   setActiveTab,
 }: DashboardHeaderProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // Estado para controlar a abertura do menu mobile
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // <-- Adicionado
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const { logout } = useAuth();
 
@@ -54,216 +52,205 @@ export function DashboardHeader({
       .join("")
       .toUpperCase();
 
-      const handleLogout = async () => {
-        try {
-          await logout();          // espera o cookie ser removido
-          router.push("/login");
-        } catch (err) {
-          console.error("Erro ao sair:", err);
-        }
-      };
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch (err) {
+      console.error("Erro ao sair:", err);
+    }
+  };
 
-  // Função para fechar o menu mobile ao selecionar um item
   const handleMenuItemClick = (tabId: string) => {
     setActiveTab(tabId);
-    setIsMobileMenuOpen(false); // Fecha o menu após selecionar
+    setIsMobileMenuOpen(false);
   };
 
   return (
     <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
-      <div className="container mx-auto py-4 px-4 flex justify-between items-center">
+      <div className="container mx-auto px-4 py-3 sm:py-4 flex justify-between items-center">
         <div className="flex items-center">
-          <Link href="/" className="flex items-center mr-8">
+          <Link href="/" className="flex items-center mr-4">
             <img
               src="/img/logo.png"
               alt="FURIA Logo"
               className="h-8 w-8 mr-2 cursor-pointer"
             />
+            <span className="text-xl font-bold hidden sm:inline">
+              FURIA Fan Hub
+            </span>
           </Link>
-          <span className="text-xl font-bold hidden md:inline mr-8">
-            FURIA Fan Hub {/* Mantido como no original */}
-          </span>
-          <nav className="hidden md:flex space-x-6">
-            {/* Links/botões de navegação para desktop - Mantidos como estavam */}
+          
+          {/* Navegação para desktop (mostrar a partir de lg) */}
+          <nav className="hidden lg:flex space-x-6 ml-6">
             <button
               onClick={() => setActiveTab("overview")}
-              className="text-white hover:text-[#00FF00]"
+              className="text-white hover:text-[#00FF00] transition-colors"
             >
-              Dashboard {/* Mantido como no original */}
+              Dashboard
             </button>
             <button
               onClick={() => setActiveTab("events")}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-white transition-colors"
             >
               Eventos
             </button>
             <button
               onClick={() => setActiveTab("offers")}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-white transition-colors"
             >
               Recompensas
             </button>
             <button
               onClick={() => setActiveTab("chat")}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-white transition-colors"
             >
               Chat
             </button>
             <button
               onClick={() => setActiveTab("community")}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-white transition-colors"
             >
               Comunidade
             </button>
           </nav>
         </div>
 
-        <div className="flex items-center space-x-4">
-          {/* Info do usuário para desktop - Mantido como estava */}
-          <div className="hidden md:flex flex-col items-end mr-4">
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          {/* Info do usuário para desktop (mostrar a partir de lg) */}
+          <div className="hidden lg:flex flex-col items-end mr-4">
             <span className="text-sm text-white">{userData.user.name}</span>
-            {/* <span className="text-xs text-gray-400">{userData.user.email}</span> */}
           </div>
 
-          {/* Botão de Notificações - Mantido como estava */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 bg-[#00FF00] rounded-full" />
-          </Button>
-
-          {/* Botão de Configurações (abre Dialog) - Mantido como estava */}
-          <Button
-            variant="ghost"
-            size="icon"
+          {/* Botões de ação - sempre visíveis exceto em mobile */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hidden sm:inline-flex"
             onClick={() => setSettingsOpen(true)}
           >
             <Settings className="h-5 w-5" />
           </Button>
 
-          {/* Dropdown Menu do Avatar do Usuário - Mantido como estava */}
+          <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
+            <Bell className="h-5 w-5" />
+            <span className="absolute top-1 right-1 h-2 w-2 bg-[#00FF00] rounded-full" />
+          </Button>
+
+          {/* Avatar - sempre visível */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 className="relative h-8 w-8 rounded-full items-center flex justify-center"
               >
-                <Avatar className="h-8 w-8 border-2 border-white flex items-center justify-center">
+                <Avatar className="h-8 w-8 border-2 border-white">
                   <AvatarFallback>
                     {getInitials(userData.user.name)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-80 border border-gray-300" align="end" forceMount>
+            <DropdownMenuContent 
+              className="w-64 border border-gray-700 bg-gray-800" 
+              align="end" 
+              forceMount
+            >
               <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1 ">
-                  <p className="text-sm font-medium leading-none">
-                    {userData.user.name}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground ">
-                    {userData.user.email}
-                  </p>
-                </div>
+              <div className="flex flex-col space-y-1">
+  <p className="text-sm font-medium leading-none text-white truncate max-w-[180px] md:max-w-[220px] lg:max-w-none">
+    {userData.user.name}
+  </p>
+  <p className="text-xs leading-none text-gray-400 truncate max-w-[180px] md:max-w-[220px] lg:max-w-none hidden sm:block">
+    {userData.user.email}
+  </p>
+</div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+              <DropdownMenuSeparator className="bg-gray-700" />
+              <DropdownMenuItem 
+                onClick={() => setSettingsOpen(true)}
+                className="text-white hover:bg-gray-700 focus:bg-gray-700"
+              >
                 <Settings className="mr-2 h-4 w-4" /> Configurações
               </DropdownMenuItem>
-            
-               <div className="flex items-start justify-start border-none">
-               <VerificationModal  />
-               </div>
-              <DropdownMenuItem onClick={handleLogout}>
+              <div className="flex items-start justify-start border-none">
+                <VerificationModal />
+              </div>
+              <DropdownMenuItem 
+                onClick={handleLogout}
+                className="text-red-400 hover:bg-gray-700 focus:bg-gray-700"
+              >
                 <LogOut className="mr-2 h-4 w-4" /> Sair
               </DropdownMenuItem>
-
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Botão do Menu Mobile */}
-          {/* Envolto por SheetTrigger */}
+          {/* Menu mobile (mostrar apenas abaixo de lg) */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="ghost" size="icon" className="lg:hidden">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-
-            {/* Conteúdo do Menu Lateral (SheetContent) */}
-            <SheetContent side="right" className="bg-gray-900 border-gray-800">
-              <SheetHeader>
-                {/* Título do menu lateral */}
-                <SheetTitle className="text-white">Menu</SheetTitle>
+            <SheetContent 
+              side="right" 
+              className="bg-gray-900 border-l border-gray-800 w-72"
+            >
+              <SheetHeader className="mb-4">
+                <SheetTitle className="text-white flex items-center">
+                  <img
+                    src="/img/logo.png"
+                    alt="FURIA Logo"
+                    className="h-6 w-6 mr-2"
+                  />
+                  Menu
+                </SheetTitle>
               </SheetHeader>
-              <div className="py-4 space-y-4">
-                {/* Info do usuário no menu mobile */}
-                <div className="flex items-center gap-4 p-2 rounded-lg bg-gray-800">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800">
                   <Avatar className="h-10 w-10">
-                    {/* Supondo que você tenha uma imagem de avatar ou usa AvatarFallback */}
-                    {/* <AvatarImage src={userData.user.avatar || "/placeholder.png"} alt={userData.user.name} /> */}
                     <AvatarFallback>{getInitials(userData.user.name)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-medium">{userData.user.name}</p>
+                    <p className="text-sm font-medium text-white">{userData.user.name}</p>
                     <p className="text-xs text-gray-400">
                       {userData.user.email}
                     </p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  {/* Itens do menu mobile */}
-                  {/* Usando botões que chamam handleMenuItemClick para mudar a aba E fechar o menu */}
+                <div className="space-y-1">
+                  {[
+                    { id: "overview", label: "Dashboard", icon: <Home className="h-5 w-5" /> },
+                    { id: "events", label: "Eventos", icon: <Calendar className="h-5 w-5" /> },
+                    { id: "offers", label: "Recompensas", icon: <ShoppingBag className="h-5 w-5" /> },
+                    { id: "chat", label: "Chat", icon: <MessageSquare className="h-5 w-5" /> },
+                    { id: "community", label: "Comunidade", icon: <Users className="h-5 w-5" /> },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleMenuItemClick(item.id)}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-white"
+                    >
+                      {item.icon}
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="border-t border-gray-700 pt-2">
                   <button
-                    onClick={() => handleMenuItemClick("overview")}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 w-full text-left"
+                    onClick={() => { setSettingsOpen(true); setIsMobileMenuOpen(false); }}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-white"
                   >
-                    <Home className="h-5 w-5" />
-                    Dashboard {/* Mantido como no original */}
+                    <Settings className="h-5 w-5" />
+                    Configurações
                   </button>
                   <button
-                    onClick={() => handleMenuItemClick("events")}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 w-full text-left"
+                    onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-red-400"
                   >
-                    <Calendar className="h-5 w-5" />
-                    Eventos
+                    <LogOut className="h-5 w-5" />
+                    Sair
                   </button>
-                  <button
-                     onClick={() => handleMenuItemClick("offers")}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 w-full text-left"
-                  >
-                    <ShoppingBag className="h-5 w-5" /> {/* Ícone Recompensas */}
-                    Recompensas
-                  </button>
-                  <button
-                    onClick={() => handleMenuItemClick("chat")}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 w-full text-left"
-                  >
-                    <MessageSquare className="h-5 w-5" />
-                    Chat
-                  </button>
-                   <button
-                     onClick={() => handleMenuItemClick("community")}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 w-full text-left"
-                  >
-                    <Users className="h-5 w-5" />
-                    Comunidade
-                  </button>
-
-                   {/* Itens adicionais do menu do avatar (Configurações e Sair) */}
-                   <button
-                     onClick={() => { setSettingsOpen(true); setIsMobileMenuOpen(false); }} // Abre settings E fecha o menu mobile
-                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 w-full text-left"
-                   >
-                     <Settings className="h-5 w-5" />
-                     Configurações
-                   </button>
-                   <button
-                      onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} // Faz logout E fecha o menu mobile
-                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 w-full text-left text-red-400 hover:text-red-500" // Opcional: cor diferente para sair
-                   >
-                     <LogOut className="h-5 w-5" />
-                     Sair
-                   </button>
                 </div>
               </div>
             </SheetContent>
@@ -271,7 +258,6 @@ export function DashboardHeader({
         </div>
       </div>
 
-      {/* O Dialog de Configurações permanece aqui, fora do Sheet */}
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </header>
   );

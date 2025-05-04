@@ -53,13 +53,13 @@ export default function DiscussionFeed({ isLoading }: DiscussionFeedProps) {
       content:
         "Que jogo incrível ontem! FURIA mostrou porque é o melhor time do Brasil. arT com aquelas entradas agressivas e KSCERATO segurando o bomb site sozinho. O que vocês acharam?",
       timestamp: "2h atrás",
-      likes: 42,
-      comments: 8,
-      shares: 3,
+      likes: 1034,
+      comments: 450,
+      shares: 57,
       tags: ["CS2", "ESL Pro League"],
       media: {
         type: "image",
-        url: "/placeholder.svg?height=300&width=600",
+        url: "https://s2-ge.glbimg.com/j0pDSLp_MImar5rFbQfQtgQLi58=/1200x/smart/filters:cover():strip_icc()/i.s3.glbimg.com/v1/AUTH_bc8228b6673f488aa253bbcb03c80ec5/internal_photos/bs/2022/r/v/KAd5B3RZ6Tb0c7d0SE0g/iem-major-rio-2022-furia-art.png",
         alt: "FURIA vs Liquid",
       },
       commentsList: [
@@ -95,7 +95,7 @@ export default function DiscussionFeed({ isLoading }: DiscussionFeedProps) {
       content:
         "Pessoal, não esqueçam que temos o encontro de fãs no próximo sábado! Vamos nos reunir para assistir FURIA vs NAVI na BLAST Premier. Quem vai estar presente?",
       timestamp: "5h atrás",
-      likes: 28,
+      likes: 5065,
       comments: 15,
       shares: 7,
       tags: ["Evento", "BLAST Premier"],
@@ -122,13 +122,13 @@ export default function DiscussionFeed({ isLoading }: DiscussionFeedProps) {
       content:
         "Acabei de receber minha nova camisa da FURIA! A qualidade está incrível, recomendo para todos os fãs. O tecido é muito confortável e o design ficou ainda mais bonito pessoalmente.",
       timestamp: "1d atrás",
-      likes: 56,
-      comments: 12,
-      shares: 4,
+      likes: 3409,
+      comments: 214,
+      shares: 52,
       tags: ["Merchandise"],
       media: {
         type: "image",
-        url: "/placeholder.svg?height=300&width=600",
+        url: "https://furiagg.fbitsstatic.net/img/p/camiseta-furia-adidas-preta-150263/337479-1.jpg?w=1280&h=1280&v=202503281012",
         alt: "Nova camisa FURIA",
       },
       commentsList: [
