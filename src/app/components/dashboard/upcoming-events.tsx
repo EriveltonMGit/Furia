@@ -3,7 +3,7 @@ import { Badge } from "../../components/ui/badge"
 import { Button } from "../../components/ui/button"
 import { Calendar, Clock, MapPin, Video } from "lucide-react"
 
-interface upcomingMatches {
+interface UpcomingEventsProps {
   userData: {
     name: string
     email: string
@@ -31,7 +31,7 @@ export function UpcomingEvents({ userData }: UpcomingEventsProps) {
       time: "18:00",
       location: "São Paulo, Brasil",
       type: "match",
-      image: "/placeholder.svg?height=200&width=400",
+      videoId: "t1c2I92NLS8", // ID do vídeo do YouTube
       attending: true,
     },
     {
@@ -42,7 +42,7 @@ export function UpcomingEvents({ userData }: UpcomingEventsProps) {
       time: "19:30",
       location: "Online",
       type: "meet_greet",
-      image: "/placeholder.svg?height=200&width=400",
+      videoId: "f4wA9rO5Nmc", // ID do vídeo do YouTube
       attending: true,
     },
     {
@@ -53,7 +53,7 @@ export function UpcomingEvents({ userData }: UpcomingEventsProps) {
       time: "10:00",
       location: "FURIA Arena, São Paulo",
       type: "fan_event",
-      image: "/placeholder.svg?height=200&width=400",
+      videoId: "WaU9YUENm8A", // ID do vídeo do YouTube
       attending: false,
     },
     {
@@ -64,29 +64,51 @@ export function UpcomingEvents({ userData }: UpcomingEventsProps) {
       time: "15:30",
       location: "Lisboa, Portugal",
       type: "match",
-      image: "/placeholder.svg?height=200&width=400",
+      videoId: "KIqiqyjydx4", // Adicionei um videoId para este evento
       attending: false,
     },
     {
       id: 5,
-      name: "Workshop de Táticas CS2 com arT",
-      description: "Workshop exclusivo sobre táticas de CS2 com o capitão da FURIA.",
+      name: "EPIC GRAND FINAL! G2 vs Vitality",
+      description: "Grande final entre G2 e Team Vitality no campeonato internacional.",
       date: "18/06/2025",
       time: "20:00",
       location: "Online",
       type: "workshop",
-      image: "/placeholder.svg?height=200&width=400",
+      videoId: "9Z0zwIXlYRQ", // Adicionei um videoId para este evento
       attending: false,
     },
     {
       id: 6,
-      name: "FURIA Community Tournament",
-      description: "Torneio da comunidade FURIA com premiação e participação de jogadores profissionais.",
+      name: "MAJOR SHANGHAI 2024",
+      description: "CLUTCH LENDÁRIO em PARTIDA HISTÓRICA SALVA A FURIA",
       date: "25/06/2025",
       time: "14:00",
       location: "Online",
       type: "tournament",
-      image: "/placeholder.svg?height=200&width=400",
+      videoId: "v4g9Rb45hJE", // Adicionei um videoId para este evento
+      attending: false,
+    },
+    {
+      id: 7,
+      name: "Furia Vs Navi) (Major Rio)",
+      description: "O DIA EM QUE O S1MPLE CONHECEU A TORCIDA BRASILEIRA!!",
+      date: "25/06/2025",
+      time: "14:00",
+      location: "Online",
+      type: "tournament",
+      videoId: "VzImCLbkzL8", // Adicionei um videoId para este evento
+      attending: false,
+    },
+    {
+      id: 8,
+      name: "Professor, o que foi isso??? ",
+      description: "COMUNIDADE PEDE GRAFITE para FALLEN EM JOGADA LENDÁRIA",
+      date: "25/06/2025",
+      time: "14:00",
+      location: "Online",
+      type: "tournament",
+      videoId: "8XEuow0AFNQ", // Adicionei um videoId para este evento
       attending: false,
     },
   ]
@@ -106,11 +128,29 @@ export function UpcomingEvents({ userData }: UpcomingEventsProps) {
               {allEvents
                 .filter((event) => event.attending)
                 .map((event) => (
-                  <div key={event.id} className="flex items-start space-x-4 p-4 bg-gray-700 rounded-lg">
-                    <div className="bg-[#00FF00] p-2 rounded-md text-center min-w-[60px]">
-                      <span className="text-xs">{event.date.split("/")[1]}</span>
-                      <p className="text-xl font-bold leading-none">{event.date.split("/")[0]}</p>
-                    </div>
+                  <div key={event.id} className="flex flex-col md:flex-row gap-4 p-4 bg-gray-700 rounded-lg">
+                    {event.videoId ? (
+                      <div className="w-full md:w-1/3 h-48 relative">
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${event.videoId}`}
+                          title={event.name}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-full rounded-md"
+                        ></iframe>
+                      </div>
+                    ) : (
+                      <div className="w-full md:w-1/3 h-48 bg-gray-600 rounded-md flex items-center justify-center">
+                        <img 
+                          src="/placeholder.svg" 
+                          alt={event.name} 
+                          className="w-full h-full object-cover rounded-md" 
+                        />
+                      </div>
+                    )}
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <h3 className="font-medium">{event.name}</h3>
@@ -121,13 +161,25 @@ export function UpcomingEvents({ userData }: UpcomingEventsProps) {
                         {event.type === "tournament" && <Badge className="bg-red-600">Torneio</Badge>}
                       </div>
                       <p className="text-sm text-gray-400 mt-1">{event.description}</p>
-                      <div className="flex items-center mt-2 text-sm text-gray-400">
-                        <Clock className="h-3 w-3 mr-1" />
-                        <span>{event.time}</span>
-                        <span className="mx-2">•</span>
-                        <MapPin className="h-3 w-3 mr-1" />
-                        <span>{event.location}</span>
+                      <div className="flex items-center mt-4 text-sm text-gray-400">
+                        <div className="flex items-center mr-4">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          <span>{event.date}</span>
+                        </div>
+                        <div className="flex items-center mr-4">
+                          <Clock className="h-4 w-4 mr-1" />
+                          <span>{event.time}</span>
+                        </div>
+                        <div className="flex items-center">
+                          {event.location === "Online" ? (
+                            <Video className="h-4 w-4 mr-1" />
+                          ) : (
+                            <MapPin className="h-4 w-4 mr-1" />
+                          )}
+                          <span>{event.location}</span>
+                        </div>
                       </div>
+                      <Button className="mt-4 bg-[#00FF00] hover:bg-[#39a139]">Ver Detalhes</Button>
                     </div>
                   </div>
                 ))}
@@ -143,25 +195,55 @@ export function UpcomingEvents({ userData }: UpcomingEventsProps) {
           .filter((event) => !event.attending)
           .map((event) => (
             <Card key={event.id} className="bg-gray-800 border-gray-700 overflow-hidden">
-              <div className="h-48 bg-gray-700 relative">
-                <img src={event.image || "/placeholder.svg"} alt={event.name} className="w-full h-full object-cover" />
-                <div className="absolute top-2 right-2">
-                  {event.type === "match" && <Badge className="bg-blue-600">Partida</Badge>}
-                  {event.type === "meet_greet" && <Badge className="bg-purple-600">Meet & Greet</Badge>}
-                  {event.type === "fan_event" && <Badge className="bg-green-600">Evento de Fãs</Badge>}
-                  {event.type === "workshop" && <Badge className="bg-yellow-600">Workshop</Badge>}
-                  {event.type === "tournament" && <Badge className="bg-red-600">Torneio</Badge>}
+              {event.videoId ? (
+                <div className="h-48 relative">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${event.videoId}`}
+                    title={event.name}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full object-cover"
+                  ></iframe>
+                  <div className="absolute top-2 right-2">
+                    {event.type === "match" && <Badge className="bg-blue-600">Partida</Badge>}
+                    {event.type === "meet_greet" && <Badge className="bg-purple-600">Meet & Greet</Badge>}
+                    {event.type === "fan_event" && <Badge className="bg-green-600">Evento de Fãs</Badge>}
+                    {event.type === "workshop" && <Badge className="bg-yellow-600">Workshop</Badge>}
+                    {event.type === "tournament" && <Badge className="bg-red-600">Torneio</Badge>}
+                  </div>
+                  <div className="absolute bottom-0 left-0 bg-[#00FF00] px-3 py-2 flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    <span>{event.date}</span>
+                  </div>
                 </div>
-                <div className="absolute bottom-0 left-0 bg-[#00FF00#00FF00] px-3 py-2 flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  <span>{event.date}</span>
+              ) : (
+                <div className="h-48 bg-gray-700 relative">
+                  <img 
+                    src="/placeholder.svg" 
+                    alt={event.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                  <div className="absolute top-2 right-2">
+                    {event.type === "match" && <Badge className="bg-blue-600">Partida</Badge>}
+                    {event.type === "meet_greet" && <Badge className="bg-purple-600">Meet & Greet</Badge>}
+                    {event.type === "fan_event" && <Badge className="bg-green-600">Evento de Fãs</Badge>}
+                    {event.type === "workshop" && <Badge className="bg-yellow-600">Workshop</Badge>}
+                    {event.type === "tournament" && <Badge className="bg-red-600">Torneio</Badge>}
+                  </div>
+                  <div className="absolute bottom-0 left-0 bg-[#00FF00] px-3 py-2 flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    <span>{event.date}</span>
+                  </div>
                 </div>
-              </div>
-              <CardContent className="p-4 border  h-[55%] flex items-center justify-between flex-col">
+              )}
+              <CardContent className="p-4 border h-[55%] flex items-center justify-between flex-col">
                 <h3 className="font-medium text-lg mb-2">{event.name}</h3>
                 <p className="text-sm text-gray-400 mb-4">{event.description}</p>
 
-                <div className="flex items-center justify-between text-sm  text-gray-400 mb-4">
+                <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
                   <div className="flex items-center">
                     <Clock className="h-3 w-3 mr-1" />
                     <span>{event.time}</span>

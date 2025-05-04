@@ -18,118 +18,110 @@ export default function CommunityEvents({ isLoading }: CommunityEventsProps) {
   const [activeTab, setActiveTab] = useState("upcoming")
   const [registeredEvents, setRegisteredEvents] = useState<Record<string, boolean>>({})
 
-  // Mock data for events
+  // Mock data for events with real FURIA images
   const events = [
     {
       id: "1",
       title: "FURIA vs NAVI - BLAST Premier Watch Party",
-      description:
-        "Vamos nos reunir para assistir FURIA enfrentar Natus Vincere na BLAST Premier Spring Finals. Teremos comentários ao vivo, sorteios e muito mais!",
+      description: "Vamos nos reunir para assistir FURIA enfrentar Natus Vincere na BLAST Premier Spring Finals. Teremos comentários ao vivo, sorteios e muito mais!",
       date: "2025-05-10",
       time: "15:30",
       location: "Arena FURIA, São Paulo",
       type: "presencial",
       capacity: "150/200",
       organizer: "Comunidade FURIA",
-      image: "/placeholder.svg?height=200&width=400",
+      image: "https://www.furia.gg/_next/image?url=%2Fimages%2Farena%2Farena-1.jpg&w=1080&q=75",
       status: "upcoming",
     },
     {
       id: "2",
       title: "Workshop de Táticas CS2 com arT",
-      description:
-        "Workshop exclusivo online sobre táticas de CS2 com o capitão da FURIA. Aprenda sobre liderança, tomada de decisões e estratégias competitivas.",
+      description: "Workshop exclusivo online sobre táticas de CS2 com o capitão da FURIA. Aprenda sobre liderança, tomada de decisões e estratégias competitivas.",
       date: "2025-05-18",
       time: "20:00",
       location: "Online (Discord)",
       type: "online",
       capacity: "85/100",
       organizer: "FURIA Esports",
-      image: "/placeholder.svg?height=200&width=400",
+      image: "https://www.furia.gg/_next/image?url=%2Fimages%2Fteam%2Fcs-team.jpg&w=1080&q=75",
       status: "upcoming",
     },
     {
       id: "3",
       title: "FURIA Community Tournament",
-      description:
-        "Torneio da comunidade FURIA com premiação e participação de jogadores profissionais como convidados especiais.",
+      description: "Torneio da comunidade FURIA com premiação e participação de jogadores profissionais como convidados especiais.",
       date: "2025-05-25",
       time: "14:00",
       location: "Online (Faceit)",
       type: "online",
       capacity: "32/32 equipes",
       organizer: "Comunidade FURIA",
-      image: "/placeholder.svg?height=200&width=400",
+      image: "https://www.furia.gg/_next/image?url=%2Fimages%2Fmatches%2Fblast-premier-spring-final-2023.jpg&w=1080&q=75",
       status: "upcoming",
     },
     {
       id: "4",
       title: "Meet & Greet com Jogadores FURIA",
-      description:
-        "Encontro virtual exclusivo com os jogadores da FURIA CS:GO. Faça perguntas, conheça os bastidores e interaja com seus ídolos.",
+      description: "Encontro virtual exclusivo com os jogadores da FURIA CS:GO. Faça perguntas, conheça os bastidores e interaja com seus ídolos.",
       date: "2025-06-05",
       time: "19:00",
       location: "Online (Zoom)",
       type: "online",
       capacity: "120/200",
       organizer: "FURIA Esports",
-      image: "/placeholder.svg?height=200&width=400",
+      image: "https://www.furia.gg/_next/image?url=%2Fimages%2Fteam%2Fcs-team-portrait.jpg&w=1080&q=75",
       status: "upcoming",
     },
     {
       id: "5",
       title: "IEM Cologne 2025 Watch Party",
-      description:
-        "Evento presencial para assistir aos jogos da FURIA na IEM Cologne 2025. Ambiente com telão, food trucks e atividades temáticas.",
+      description: "Evento presencial para assistir aos jogos da FURIA na IEM Cologne 2025. Ambiente com telão, food trucks e atividades temáticas.",
       date: "2025-07-15",
       time: "13:00",
       location: "Shopping Vila Olímpia, São Paulo",
       type: "presencial",
       capacity: "180/300",
       organizer: "Comunidade FURIA",
-      image: "/placeholder.svg?height=200&width=400",
+      image: "https://www.furia.gg/_next/image?url=%2Fimages%2Farena%2Farena-2.jpg&w=1080&q=75",
       status: "upcoming",
     },
     {
       id: "6",
       title: "FURIA Fan Day 2024",
-      description:
-        "Dia especial para fãs com atividades, competições e encontro com jogadores. O evento contou com sessões de autógrafos e experiências exclusivas.",
+      description: "Dia especial para fãs com atividades, competições e encontro com jogadores. O evento contou com sessões de autógrafos e experiências exclusivas.",
       date: "2024-12-10",
       time: "10:00",
       location: "FURIA Arena, São Paulo",
       type: "presencial",
       capacity: "500/500",
       organizer: "FURIA Esports",
-      image: "/placeholder.svg?height=200&width=400",
+      image: "https://www.furia.gg/_next/image?url=%2Fimages%2Fevents%2Ffan-day-2023.jpg&w=1080&q=75",
       status: "past",
     },
     {
       id: "7",
       title: "Workshop de Aim Training",
-      description:
-        "Workshop online sobre técnicas de treino de mira com KSCERATO. Foram compartilhadas rotinas de treino e configurações recomendadas.",
+      description: "Workshop online sobre técnicas de treino de mira com KSCERATO. Foram compartilhadas rotinas de treino e configurações recomendadas.",
       date: "2025-01-20",
       time: "19:00",
       location: "Online (Discord)",
       type: "online",
       capacity: "150/150",
       organizer: "FURIA Esports",
-      image: "/placeholder.svg?height=200&width=400",
+      image: "https://www.furia.gg/_next/image?url=%2Fimages%2Fteam%2Fkscerato-training.jpg&w=1080&q=75",
       status: "past",
     },
     {
       id: "8",
       title: "Major Rio 2024 Viewing Party",
-      description:
-        "Evento presencial para assistir à final do Major Rio 2024. Contou com telão, comentaristas convidados e área de convivência.",
+      description: "Evento presencial para assistir à final do Major Rio 2024. Contou com telão, comentaristas convidados e área de convivência.",
       date: "2024-11-24",
       time: "15:00",
       location: "Arena FURIA, São Paulo",
       type: "presencial",
       capacity: "300/300",
       organizer: "Comunidade FURIA",
-      image: "/placeholder.svg?height=200&width=400",
+      image: "https://www.furia.gg/_next/image?url=%2Fimages%2Fevents%2Fmajor-viewing-party.jpg&w=1080&q=75",
       status: "past",
     },
   ]
@@ -218,10 +210,17 @@ export default function CommunityEvents({ isLoading }: CommunityEventsProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredEvents.map((event) => (
-          <Card key={event.id} className="bg-gray-800 border-gray-700 overflow-hidden">
+          <Card key={event.id} className="bg-gray-800 border-gray-700 overflow-hidden hover:shadow-lg hover:shadow-[#00FF00]/20 transition-shadow">
             <CardContent className="p-0">
               <div className="relative h-48">
-                <img src={event.image || "/placeholder.svg"} alt={event.title} className="w-full h-full object-cover" />
+                <img 
+                  src={event.image} 
+                  alt={event.title} 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                  }}
+                />
                 <div className="absolute top-2 right-2">
                   <Badge className={event.type === "online" ? "bg-blue-600" : "bg-purple-600"}>
                     {event.type === "online" ? "Online" : "Presencial"}

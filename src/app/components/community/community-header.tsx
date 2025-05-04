@@ -36,7 +36,10 @@ export default function CommunityHeader() {
             <img src="/img/logo.png" alt="FURIA Logo" className="h-8 w-8 mr-2" />
             {/* <span className="text-xl font-bold hidden md:inline">FURIA Fan Hub</span> */}
           </Link>
-
+          <div className="flex items-center">
+            <div className="h-3 w-3 rounded-full bg-[#00FF00] mr-2"></div>
+            <span className="text-sm">1.243 fãs online</span> {/* Este valor é estático */}
+          </div>
        
         </div>
 
