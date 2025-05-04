@@ -35,7 +35,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 text-white">
+      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 text-white ">
         <DialogHeader>
           <DialogTitle className="text-xl">Configurações</DialogTitle>
           <DialogDescription className="text-gray-400">

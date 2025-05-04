@@ -143,7 +143,7 @@ export default function CommunityGroups({ isLoading }: CommunityGroupsProps) {
   if (isLoading) {
     return (
       <div>
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 ">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>

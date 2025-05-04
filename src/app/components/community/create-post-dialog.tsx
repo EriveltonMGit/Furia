@@ -38,9 +38,11 @@ export default function CreatePostDialog({ open, onOpenChange }: CreatePostDialo
 
   // Mock user data
   const user = {
-    name: "Carlos Silva",
-    avatar: "/placeholder.svg?height=40&width=40",
+    name: "Nome do usuário - em Breve",
+    email: "example@email.com",
+    avatar: "/img/logo.png",
   }
+
 
   // Mock suggested tags
   const suggestedTags = ["CS2", "FURIA", "ESL", "Estratégia", "Valorant", "Merchandise", "Comunidade", "Evento"]
@@ -124,7 +126,7 @@ export default function CreatePostDialog({ open, onOpenChange }: CreatePostDialo
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-4 ">
           <Avatar>
             <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>

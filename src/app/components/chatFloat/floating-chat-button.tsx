@@ -1,12 +1,12 @@
 // components/chatFloat/floating-chat-button.tsx
-"use client"; // Já está aqui
+"use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquare, X, Loader2 } from "lucide-react"; // Importe Loader2 caso queira usar um loader
+import { MessageSquare, X, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
 import FloatingChatWindow from "./floating-chat-window";
-import { useAuth } from "../../contexts/AuthContext"; // <-- IMPORTE SEU HOOK DE AUTENTICAÇÃO AQUI
+import { useAuth } from "../../contexts/AuthContext";
 
 interface FloatingChatButtonProps {
   initiallyOpen?: boolean;
@@ -21,10 +21,9 @@ export default function FloatingChatButton({
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
 
-  // <-- USE SEU HOOK DE AUTENTICAÇÃO AQUI -->
   const { isAuthenticated, loading } = useAuth();
 
-  // Posicionamento do botão flutuante
+  // Posicionamento base do botão flutuante (desktop/tablet)
   const positionClasses = {
     "bottom-right": "bottom-4 right-4",
     "bottom-left": "bottom-4 left-4",
@@ -34,7 +33,6 @@ export default function FloatingChatButton({
 
   // Efeito para mostrar mensagem de boas-vindas após um tempo
   useEffect(() => {
-    // Este efeito SÓ deve rodar se o usuário estiver autenticado E se for a primeira carga E o chat não abrir inicialmente
     if (!loading && isAuthenticated && isFirstLoad && !initiallyOpen) {
       const timer = setTimeout(() => {
         setHasUnreadMessages(true);
@@ -44,38 +42,42 @@ export default function FloatingChatButton({
       return () => clearTimeout(timer);
     }
 
-    // Se o usuário não está autenticado após carregar, garante que não há mensagens não lidas ou janela aberta
     if (!loading && !isAuthenticated) {
         setHasUnreadMessages(false);
-        setIsOpen(false); // Garante que a janela está fechada se o usuário deslogar ou não estiver logado
+        setIsOpen(false);
     }
 
-  }, [isFirstLoad, initiallyOpen, loading, isAuthenticated]); // <-- ADICIONE loading e isAuthenticated como dependências
+  }, [isFirstLoad, initiallyOpen, loading, isAuthenticated]);
 
   // Resetar indicador de mensagens não lidas quando o chat é aberto
   useEffect(() => {
-    // Só reseta se o chat abrir E o usuário estiver autenticado
     if (isOpen && isAuthenticated) {
       setHasUnreadMessages(false);
     }
-  }, [isOpen, isAuthenticated]); // <-- ADICIONE isAuthenticated como dependência
+  }, [isOpen, isAuthenticated]);
 
   // --- LÓGICA DE PROTEÇÃO DA ROTA/COMPONENTE ---
-  // Se o estado de autenticação ainda está carregando, não renderiza nada
   if (loading) {
-    // Opcional: Você pode retornar um pequeno spinner aqui se o posicionamento não atrapalhar
     return null;
   }
 
-  // Se o usuário NÃO está autenticado após o carregamento, não renderiza nada (nem botão, nem janela)
   if (!isAuthenticated) {
     return null;
   }
   // --- FIM DA LÓGICA DE PROTEÇÃO ---
 
+  // Determina classes de posicionamento responsivas
+  let responsivePositionClasses = positionClasses[position];
 
-  // Se chegamos aqui, significa que loading é false E isAuthenticated é true.
-  // O usuário está logado, então renderizamos o botão e a janela.
+  // Se a posição começar com 'bottom', adiciona uma classe bottom maior para mobile
+  if (position.startsWith("bottom")) {
+      // Isso adiciona 'bottom-20' para mobile e 'md:bottom-4' para md e acima.
+      // O 'bottom-4' original de positionClasses[position] será sobrescrito por 'bottom-20' em mobile
+      // e por 'md:bottom-4' em md+.
+      responsivePositionClasses = cn(responsivePositionClasses, "bottom-20 md:bottom-4");
+  }
+  // Posições 'top' não precisam de ajuste para o rodapé.
+
   return (
     <>
       {/* Botão flutuante - Só é renderizado se o usuário está autenticado */}
@@ -83,8 +85,9 @@ export default function FloatingChatButton({
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "fixed z-50 rounded-full w-14 h-14 shadow-lg flex items-center justify-center transition-all duration-300",
-          positionClasses[position],
-          isOpen ? "bg-red-500 hover:bg-red-600" : "bg-[#00FF00] hover:bg-[#00DD00]", // Corrigido um possível typo aqui ]
+          // Usa as classes de posição dinâmicas/responsivas
+          responsivePositionClasses,
+          isOpen ? "bg-red-500 hover:bg-red-600" : "bg-[#00FF00] hover:bg-[#00DD00]",
         )}
         aria-label={isOpen ? "Fechar Chat" : "Abrir Chat"}
       >
@@ -94,7 +97,7 @@ export default function FloatingChatButton({
           <div className="relative">
             <MessageSquare className="h-6 w-6 text-black" />
             {hasUnreadMessages && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse"> {/* Adicionado animate-pulse */}
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
                 1
               </span>
             )}
@@ -103,6 +106,8 @@ export default function FloatingChatButton({
       </Button>
 
       {/* Janela de chat flutuante - Só é renderizada se o usuário está autenticado */}
+      {/* A janela de chat em si pode precisar de ajustes de posicionamento em mobile
+          para não ficar por baixo do rodapé, mas isso é um ajuste diferente. */}
       {isAuthenticated && <FloatingChatWindow isOpen={isOpen} onClose={() => setIsOpen(false)} />}
     </>
   );
